@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meeting Minutes — Form</title>
+<style>
+  :root {
+    --accent: #A0441D;
+    --accent-dark: #8A3916;
+    --accent-soft: #F6EFEA;
+    --page: #F4F5F7;
+    --surface: #FFFFFF;
+    --surface-soft: #FBFAF8;
+    --text: #1F232C;
+    --muted: #667085;
+    --muted-light: #8A8D93;
+    --border: #E0E3E8;
+    --border-light: #EEF0F3;
+    --input-border: #D5D9E0;
+    --header-bg: #F0EEEC;
+    --section-head: #E8E4DF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    font-size: 12.5px;
+    color: var(--text);
+    background: var(--page);
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 10px 14px 8px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  /* ---- Meta row ---- */
+  .meta {
+    display: grid;
+    grid-template-columns: 1.35fr 0.9fr 1fr 1.15fr 0.85fr;
+    gap: 6px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    flex: 0 0 auto;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .field label {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .field input,
+  .field select {
+    width: 100%;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    outline: none;
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(160, 68, 29, 0.1);
+  }
+
+  .time-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  .time-pair select { height: 28px; }
+
+  /* ---- Body grid ---- */
+  .body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto 1fr auto auto;
+    gap: 8px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 5px 10px;
+    background: var(--section-head);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text);
+    flex: 0 0 auto;
+  }
+
+  .card-head .edit {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .card-head .edit:hover { color: var(--accent-dark); text-decoration: underline; }
+
+  .card-body {
+    padding: 6px 8px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  /* Attendance trio */
+  .attendance-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .person-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .person-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .person-row input {
+    flex: 1;
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    font: inherit;
+  }
+
+  .avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, white);
+    flex: 0 0 22px;
+  }
+
+  .empty-box {
+    min-height: 52px;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    background: var(--surface-soft);
+  }
+
+  .absentee-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .absentee-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) 26px;
+    gap: 4px;
+    align-items: start;
+  }
+
+  .absentee-row input[type="text"] {
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    font: inherit;
+    width: 100%;
+  }
+
+  .absentee-row textarea {
+    min-height: 26px;
+    height: 26px;
+    padding: 4px 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    font: inherit;
+    resize: vertical;
+    line-height: 1.3;
+  }
+
+  .absentee-row textarea:focus {
+    height: 44px;
+  }
+
+  .absentee-labels {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) 26px;
+    gap: 4px;
+    margin-bottom: 2px;
+  }
+
+  .absentee-labels span {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  /* Presenter / Participants */
+  .people-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .chip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .chip input {
+    flex: 1;
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    font: inherit;
+  }
+
+  .icon-btn {
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    background: #fff;
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    flex: 0 0 26px;
+    line-height: 1;
+  }
+
+  .icon-btn:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+
+  /* Agenda */
+  .agenda-block {
+    grid-column: 1 / -1;
+  }
+
+  .agenda-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .agenda-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .agenda-item input {
+    flex: 1;
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    font: inherit;
+  }
+
+  .reorder {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .reorder button {
+    width: 22px;
+    height: 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 3px;
+    background: #fff;
+    color: var(--muted);
+    font-size: 9px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .reorder button:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Minutes + Discussion */
+  .minutes-block { min-height: 0; }
+  .discussion-block { min-height: 0; }
+
+  textarea {
+    width: 100%;
+    height: 100%;
+    min-height: 48px;
+    padding: 6px 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    font: inherit;
+    color: var(--text);
+    resize: none;
+    outline: none;
+    background: #fff;
+  }
+
+  .disc-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .disc-row input {
+    flex: 1;
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    font: inherit;
+  }
+
+  /* Actions table */
+  .actions-block {
+    grid-column: 1 / -1;
+    min-height: 0;
+  }
+
+  .actions-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+  }
+
+  .actions-table th {
+    text-align: left;
+    padding: 4px 6px;
+    background: var(--surface-soft);
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .actions-table td {
+    padding: 3px 4px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+  }
+
+  .actions-table select,
+  .actions-table input {
+    width: 100%;
+    height: 26px;
+    padding: 0 6px;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    font: inherit;
+    background: #fff;
+  }
+
+  .actions-table input[type="date"] {
+    min-width: 0;
+  }
+
+  .status-add {
+    height: 22px !important;
+    padding: 0 8px !important;
+    border: 0 !important;
+    border-radius: 4px !important;
+    background: var(--accent) !important;
+    color: #fff !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    cursor: pointer;
+  }
+
+  .status-add:hover { background: var(--accent-dark) !important; }
+
+  .actions-blank {
+    height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 0 0 6px 6px;
+    margin-top: -1px;
+  }
+
+  /* AOB */
+  .aob-block {
+    grid-column: 1 / -1;
+  }
+
+  .aob-block textarea {
+    min-height: 36px;
+    height: 36px;
+  }
+
+  /* Footer actions */
+  .footer {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 4px 0 2px;
+  }
+
+  .btn {
+    height: 32px;
+    padding: 0 18px;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-secondary {
+    border: 1px solid var(--input-border);
+    background: #fff;
+    color: var(--text);
+  }
+
+  .btn-secondary:hover { background: #F4F3F0; }
+
+  .btn-primary {
+    border: 0;
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: var(--accent-dark); }
+
+  .btn-ghost {
+    border: 1px solid var(--input-border);
+    background: var(--surface-soft);
+    color: var(--muted);
+  }
+
+  /* Compact helpers */
+  .span-2 { grid-column: span 2; }
+
+  @media (max-width: 900px) {
+    .page { height: auto; overflow: auto; }
+    .meta { grid-template-columns: 1fr 1fr; }
+    .attendance-row,
+    .people-row { grid-template-columns: 1fr; }
+    .body { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Meta header -->
+    <div class="meta">
+      <div class="field">
+        <label>Reference ID</label>
+        <input type="text" value="RSMTh-260-1/22/2026 6:25 PM" readonly>
+      </div>
+      <div class="field">
+        <label>Meeting Date</label>
+        <input type="date" value="2026-09-15">
+      </div>
+      <div class="field">
+        <label>Reporting</label>
+        <input type="text" value="Augustine Adenaya">
+      </div>
+      <div class="field">
+        <label>Meeting Type</label>
+        <select>
+          <option>Organizational Meeting</option>
+          <option selected>HSE Management Safety</option>
+          <option>Unit Meeting</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Meeting Week</label>
+        <select>
+          <option selected>Week 38</option>
+          <option>Week 39</option>
+          <option>Week 40</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Required Time</label>
+        <input type="text" value="1 Hour">
+      </div>
+      <div class="field">
+        <label>Time Keeper</label>
+        <input type="text" value="Augustine Adenaya">
+      </div>
+      <div class="field">
+        <label>Start Time</label>
+        <div class="time-pair">
+          <select>
+            <option>09</option>
+            <option selected>10</option>
+          </select>
+          <select>
+            <option selected>00</option>
+            <option>15</option>
+            <option>30</option>
+            <option>45</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>End Time</label>
+        <div class="time-pair">
+          <select>
+            <option selected>10</option>
+            <option>11</option>
+          </select>
+          <select>
+            <option>00</option>
+            <option selected>30</option>
+            <option>45</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <div style="height:28px"></div>
+      </div>
+    </div>
+
+    <!-- Main body -->
+    <div class="body">
+
+      <!-- Attendance trio -->
+      <div class="attendance-row">
+        <section class="card">
+          <div class="card-head">Attendance</div>
+          <div class="card-body person-list">
+            <div class="person-row"><input value="inemesit udohuan"><span class="avatar"></span></div>
+            <div class="person-row"><input value="josephine Ogbonna"><span class="avatar"></span></div>
+            <div class="person-row"><input value="Sofiq Bakareunde"><span class="avatar"></span></div>
+            <div class="person-row"><input value="Augustine Adenaya"><span class="avatar"></span></div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-head">
+            Absentees
+            <button type="button" class="icon-btn" title="Add absentee" style="width:22px;height:22px;font-size:13px">+</button>
+          </div>
+          <div class="card-body">
+            <div class="absentee-labels">
+              <span>Person</span>
+              <span>Reason</span>
+              <span></span>
+            </div>
+            <div class="absentee-list">
+              <div class="absentee-row">
+                <input type="text" placeholder="Select person…">
+                <textarea placeholder="Reason for absence…" rows="1"></textarea>
+                <button type="button" class="icon-btn" title="Remove" style="font-size:12px;color:var(--muted)">×</button>
+              </div>
+              <div class="absentee-row">
+                <input type="text" placeholder="Select person…">
+                <textarea placeholder="Reason for absence…" rows="1"></textarea>
+                <button type="button" class="icon-btn" title="Remove" style="font-size:12px;color:var(--muted)">×</button>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-head">Time-Off <a class="edit" href="#">Edit</a></div>
+          <div class="card-body"><div class="empty-box"></div></div>
+        </section>
+      </div>
+
+      <!-- Presenter / Engagement -->
+      <div class="people-row">
+        <section class="card">
+          <div class="card-head">Presenter</div>
+          <div class="card-body chip-list">
+            <div class="chip">
+              <input value="Ebenezar Chidiike">
+              <button type="button" class="icon-btn" title="Add">+</button>
+            </div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-head">Engagement Participant</div>
+          <div class="card-body chip-list">
+            <div class="chip">
+              <input value="Akinbwale Akin-Taylor">
+              <button type="button" class="icon-btn" title="Add">+</button>
+            </div>
+            <div class="chip">
+              <input value="Augustine Adenaya">
+              <button type="button" class="icon-btn" title="Add">+</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Agenda -->
+      <section class="card agenda-block">
+        <div class="card-head">Agenda</div>
+        <div class="card-body">
+          <div class="agenda-list">
+            <div class="agenda-item">
+              <input value="Safety Presentation">
+              <div class="reorder">
+                <button type="button" title="Up">▲</button>
+                <button type="button" title="Down">▼</button>
+              </div>
+            </div>
+            <div class="agenda-item">
+              <input value="HSE Statistics">
+              <div class="reorder">
+                <button type="button" title="Up">▲</button>
+                <button type="button" title="Down">▼</button>
+              </div>
+            </div>
+            <div class="agenda-item">
+              <input value="Closing remarks">
+              <div class="reorder">
+                <button type="button" title="Up">▲</button>
+                <button type="button" title="Down">▼</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Minutes External -->
+      <section class="card minutes-block">
+        <div class="card-head">Minutes · External</div>
+        <div class="card-body">
+          <textarea placeholder="External minutes…"></textarea>
+        </div>
+      </section>
+
+      <!-- Discussion points -->
+      <section class="card discussion-block">
+        <div class="card-head">Discussion Points</div>
+        <div class="card-body">
+          <div class="disc-row">
+            <input value="Protecting the Ozone Layer">
+            <button type="button" class="icon-btn" title="Add">+</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Action items -->
+      <section class="card actions-block">
+        <div class="card-head">Action Items</div>
+        <div class="card-body" style="padding:0">
+          <table class="actions-table">
+            <thead>
+              <tr>
+                <th style="width:18%">Subdivision / Person</th>
+                <th style="width:22%">Task</th>
+                <th style="width:14%">Due Date</th>
+                <th style="width:28%">Action Plan</th>
+                <th style="width:18%">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <select>
+                    <option value="">Select…</option>
+                    <option>HSE</option>
+                    <option>Operations</option>
+                  </select>
+                </td>
+                <td><input type="text" placeholder="Task"></td>
+                <td><input type="date"></td>
+                <td><input type="text" placeholder="Action plan"></td>
+                <td style="display:flex;gap:4px;align-items:center">
+                  <select style="flex:1">
+                    <option value="">Select…</option>
+                    <option>Open</option>
+                    <option>In Progress</option>
+                    <option>Closed</option>
+                  </select>
+                  <button type="button" class="status-add">Add</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="actions-blank"></div>
+        </div>
+      </section>
+
+      <!-- AOB -->
+      <section class="card aob-block">
+        <div class="card-head">AOB</div>
+        <div class="card-body">
+          <textarea placeholder="Any other business…"></textarea>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <button type="button" class="btn btn-secondary">Previous Meeting</button>
+      <button type="button" class="btn btn-primary">Approve Minutes</button>
+      <button type="button" class="btn btn-ghost">Print</button>
+    </div>
+
+  </div>
+</body>
+</html>

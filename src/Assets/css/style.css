@@ -1,0 +1,417 @@
+:root {
+  --adr-accent: #a0441d;
+  --adr-accent-dark: #171717;
+  --adr-dark: #171a21;
+  --adr-ink: #1f232c;
+  --adr-muted: #667085;
+  --adr-surface: #f4f5f7;
+  --adr-gradient: linear-gradient(135deg, #171717 0%, #3c251c 55%, #a0441d 100%);
+  --adr-shadow: 0 16px 38px rgba(16, 24, 40, 0.09);
+}
+
+* { box-sizing: border-box; }
+.AdrApp { min-height: 100vh; display: grid; grid-template-columns: 270px minmax(0, 1fr); background: var(--adr-surface); color: var(--adr-ink); font-family: "Segoe UI", Arial, sans-serif; font-size: 1.1rem; }
+
+/* ---- Sidebar ---- */
+.AdrSidebar { min-height: 100vh; padding: 24px 16px; background: var(--adr-dark); color: #fff; }
+.AdrBrand { display: flex; align-items: center; gap: 12px; padding: 6px 10px 30px; }
+.AdrBrandMark { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: rgba(255,255,255,.08); }
+.AdrBrandMark svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.AdrBrand h1 { margin: 0; font-size: 19px; line-height: 1.15; }
+.AdrBrand p { margin: 4px 0 0; color: #9aa0ab; font-size: 11px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; }
+.AdrSidebar nav { display: grid; gap: 7px; }
+.AdrNavItem { width: 100%; min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 14px; border: 0; border-radius: 12px; background: transparent; color: #b7bac2; cursor: pointer; font-size: 13px; font-weight: 700; text-align: left; text-decoration: none; }
+.AdrNavItem > span { width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; border-radius: 8px; background: rgba(255,255,255,.06); }
+.AdrNavItem svg { width: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.AdrNavItem:hover, .AdrNavItem.active { color: #fff; background: linear-gradient(90deg,rgba(160,68,29,.95),rgba(160,68,29,.28))}
+.AdrNavGroupLabel { margin: 18px 10px 6px; color: #6c7280; font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+
+/* ---- Main / topbar ---- */
+.AdrMain { min-width: 0; }
+.AdrTopbar { height: 84px; display: flex; align-items: center; justify-content: space-between; padding: 12px 28px; background: #fff; border-bottom: 1px solid #e7e9ed; }
+.AdrTopbarLeft { display: flex; align-items: center; gap: 14px; }
+.AdrTopbarTitle { margin: 0; font-size: 18px; }
+.AdrUser { display: flex; align-items: center; gap: 10px; }
+.AdrUser > span { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--adr-gradient); color: #fff; font-weight: 900; }
+.AdrUser strong, .AdrUser small { display: block; }
+.AdrUser strong { font-size: 13px; } .AdrUser small { margin-top: 2px; color: var(--adr-muted); font-size: 11px; }
+.AdrMenuButton { display: none; width: 42px; height: 42px; padding: 10px; border: 0; border-radius: 10px; background: #f0f1f3; }
+.AdrMenuButton span { height: 2px; display: block; margin: 4px 0; background: var(--adr-dark); }
+.AdrPageContent { padding: 28px; }
+.AdrPage { display: grid; gap: 22px; max-width: 1500px; margin: 0 auto; }
+
+/* ---- Hero ---- */
+.AdrHero, .AdrCompactHero { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 32px; border-radius: 20px; background: var(--adr-gradient); color: #fff; box-shadow: 0 22px 54px rgba(17,22,40,.21); }
+.AdrCompactHero { padding: 25px 30px; }
+.AdrEyebrow { display: block; margin-bottom: 8px; color: #f5b18e; font-size: 11px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.AdrHero h2, .AdrCompactHero h2 { margin: 0; font-size: 34px; line-height: 1.05; }
+.AdrCompactHero h2 { font-size: 28px; }
+.AdrHero p, .AdrCompactHero p { max-width: 680px; margin: 10px 0 0; color: #d9deef; font-size: 14px; line-height: 1.5; }
+
+/* ---- Buttons ---- */
+.AdrPrimaryButton, .AdrSecondaryButton, .AdrAddButton, .AdrViewButton, .AdrApproveButton, .AdrRejectButton { padding: 12px 18px; border: 0; border-radius: 11px; cursor: pointer; font-weight: 800; font-size: 13px; }
+.AdrPrimaryButton { background: linear-gradient(135deg, #bd5425, #7d2d12);; color: #fff; box-shadow: 0 12px 28px rgba(31,58,147,.28); }
+.AdrHero .AdrPrimaryButton { background: #fff; color: #72280f; white-space: nowrap; }
+.AdrSecondaryButton { background: #fff; color: var(--adr-ink); box-shadow: 0 8px 20px rgba(16,24,40,.09); }
+.AdrAddButton, .AdrViewButton { min-height: 38px; background: #f2e6e0; color: #853313; }
+.AdrApproveButton { min-height: 38px; background: #dff7ea; color: #087443; }
+.AdrRejectButton { min-height: 38px; background: #fbe4e2; color: #a21f16; }
+.AdrExportButton { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 18px; border: 0; border-radius: 11px; background: #fff; color: #72280f; cursor: pointer; font-weight: 900; white-space: nowrap; box-shadow: 0 12px 28px rgba(0,0,0,.18); }
+.AdrExportButton span { font-size: 19px; line-height: 1; }
+.AdrPrimaryButton:disabled, .AdrSecondaryButton:disabled, .AdrApproveButton:disabled, .AdrRejectButton:disabled { cursor: not-allowed; opacity: .6; box-shadow: none; }
+
+/* ---- Stat cards ---- */
+.AdrStatsGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.AdrStatsGrid article { padding: 22px; border-radius: 17px; background: #fff; box-shadow: var(--adr-shadow); }
+.AdrStatsGrid span { color: var(--adr-muted); font-size: 11px; font-weight: 900; text-transform: uppercase; }
+.AdrStatsGrid strong { display: block; margin-top: 8px; font-size: 32px; }
+.AdrStatsGrid p { margin: 5px 0 0; color: var(--adr-muted); font-size: 12px; }
+
+/* ---- Panels / forms ---- */
+.AdrFormSection {
+  margin: 10px 0;
+}
+.AdrPanel, .AdrFormSection { overflow: hidden; border-radius: 18px; background: #fff; box-shadow: var(--adr-shadow); }
+.AdrPanelHeader, .AdrSectionHeader { display: flex; align-items: center; gap: 14px; padding: 20px 24px; background: #fbf7f4; border-bottom: 1px solid #e6eaf7; }
+.AdrPanelHeader { justify-content: space-between; }
+.AdrPanelHeader h3, .AdrSectionHeader h3 { margin: 0; font-size: 19px; }
+.AdrPanelHeader p, .AdrSectionHeader p { margin: 5px 0 0; color: var(--adr-muted); font-size: 12px; }
+.AdrSectionHeader > span { width: 38px; height: 38px; flex: 0 0 38px; display: grid; place-items: center; border-radius: 50%; background: var(--adr-gradient); color: #fff; font-weight: 900; }
+.AdrTableHeader > div { flex: 1; }
+.AdrQueueCount { min-width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--adr-gradient); color: #fff; }
+
+.AdrFormGrid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; padding: 22px 24px; }
+.AdrFormGrid.AdrFormGridFull { grid-template-columns: 1fr; }
+.AdrField span, .AdrDsdGrid span { display: block; margin-bottom: 7px; color: #000; font-weight: 500; }
+.AdrField input, .AdrField select, .AdrField textarea { width: 100%; min-height: 43px; padding: 10px 12px; border: 1px solid #e0e3e8; border-radius: 10px; background: #fff; color: var(--adr-ink); outline: 0; font-family: inherit; font-size: 13px; }
+.AdrField textarea { min-height: 96px; resize: vertical; }
+.AdrField input:focus, .AdrField select:focus, .AdrField textarea:focus { border-color: var(--adr-accent); box-shadow: 0 0 0 3px rgba(52,84,209,.12); }
+.AdrField input[readonly] { background: #f6f7f8; }
+.AdrFieldSpan2 { grid-column: 1 / -1; }
+.AdrRadioRow { display: flex; flex-wrap: wrap; gap: 14px; padding: 4px 0; }
+.AdrRadioRow label { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--adr-ink); }
+
+/* ---- Tables ---- */
+.AdrTableShell {
+  padding: 22px 24px;
+}
+
+.table-wrapper {
+  border: 1px solid var(--adr-accent);
+  border-radius: 20px;
+  margin: 22px 24px;
+}
+
+.tableLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 24px;
+}
+.tableLabel span { 
+  /* display: flex;  */
+  color: #667085;
+  font-weight: 500;
+}
+.AdrTableShell, .AdrDynamicTableShell { overflow-x: auto; }
+.AdrTable { width: 100%; min-width: 680px; border-collapse: collapse; }
+.AdrTable th, .AdrTable td { padding: 15px 20px; border-bottom: 1px solid #eceef1; text-align: left; font-size: 13px; }
+.AdrTable th { background: #fafafa; color: #667085; letter-spacing: .04em; }
+.AdrRequestId { color: var(--adr-accent-dark); font-weight: 700; }
+.AdrEmpty { padding: 30px !important; color: var(--adr-muted); text-align: center !important; }
+
+.AdrDynamicTable { width: 100%; min-width: 900px; border-collapse: collapse; }
+.AdrDynamicTable th, .AdrDynamicTable td { border: 1px solid #dde1ea; padding: 9px; text-align: center; }
+.AdrDynamicTable th { background: #eef1f8; color: #272727; font-size: 11px; text-transform: uppercase; }
+.AdrDynamicTable td:first-child { width: 40px; }
+.AdrDynamicTable input[type="text"], .AdrDynamicTable input:not([type]), .AdrDynamicTable select, .AdrDynamicTable textarea { width: 100%; min-height: 38px; padding: 0 9px; border: 1px solid #dfe2e7; border-radius: 7px; outline: 0; font-family: inherit; font-size: 12px; }
+.AdrDynamicTable textarea { min-height: 60px; padding: 8px 9px; resize: vertical; }
+.AdrDynamicTable input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--adr-accent); }
+.AdrRemoveButton { width: 31px; height: 31px; border: 0; border-radius: 50%; background: #fbe4e2; color: #a21f16; cursor: pointer; font-size: 19px; }
+.AdrRemoveButton:disabled { opacity: .35; cursor: not-allowed; }
+.AdrFormActions { display: flex; justify-content: flex-end; gap: 12px; padding-bottom: 5px; }
+
+/* ---- Status badges ---- */
+.AdrStatus { display: inline-flex; padding: 6px 10px; border-radius: 999px; background: #eef0f3; font-size: 11px; font-weight: 800; white-space: nowrap; }
+.AdrStatus.draft { background: #eef0f3; color: #475467; }
+.AdrStatus.pending-division-head, .AdrStatus.pending-business-sustainability, .AdrStatus.pending-app-dev-team { background: #fff0d6; color: #925100; }
+.AdrStatus.requirement-gathering { background: #e6e9fb; color: #a21f16; }
+.AdrStatus.in-development { background: #dbeafe; color: #a21f16; }
+.AdrStatus.development-completed, .AdrStatus.uat-in-progress { background: #fce7f3; color: #a3266f; }
+.AdrStatus.uat-completed { background: #d9f7e9; color: #0a7a4a; }
+.AdrStatus.closed { background: #dff7ea; color: #087443; }
+.AdrStatus.rejected { background: #fbe4e2; color: #a21f16; }
+.AdrStatus.redirected { background: #f1e6fb; color: #6b2fa8; }
+
+.AdrNotice { padding: 13px 16px; border-radius: 12px; background: #fff0d6; color: #8a4b00; font-size: 13px; font-weight: 700; }
+.AdrNoticeSuccess { background: #dff7ea; color: #087443; }
+.AdrNoticeError { background: #fbe4e2; color: #a21f16; }
+
+/* ---- Tabs (used for multi-section forms & report controls) ---- */
+.AdrTabs { min-height: 58px; display: flex; align-items: flex-end; gap: 4px; padding: 0 22px; border-bottom: 1px solid #e5e7eb; background: #f5f7fd; overflow-x: auto; }
+.AdrTabs button { min-width: 90px; min-height: 47px; padding: 0 16px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--adr-muted); cursor: pointer; font-weight: 800; font-size: 12px; white-space: nowrap; }
+.AdrTabs button.active { border-bottom-color: var(--adr-accent); color: var(--adr-accent-dark); }
+.AdrTabs strong { align-self: center; margin-left: auto; color: var(--adr-muted); font-size: 12px; white-space: nowrap; }
+
+/* ---- Checklist grid (standard features) ---- */
+.AdrChecklist { display: grid; gap: 2px; padding: 4px 24px 22px; }
+.AdrChecklistItem { display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: start; padding: 12px 4px; border-bottom: 1px solid #f0f1f4; }
+.AdrChecklistItem input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--adr-accent); }
+.AdrChecklistItem strong { display: block; font-size: 13px; }
+.AdrChecklistItem p { margin: 3px 0 0; color: var(--adr-muted); font-size: 12px; }
+.AdrChecklistItem input[type="text"] { margin-top: 8px; min-height: 36px; width: 100%; padding: 0 10px; border: 1px solid #e0e3e8; border-radius: 8px; font-size: 12px; }
+
+/* ---- Sign-off cards ---- */
+.AdrSignoffGrid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; padding: 22px 24px; }
+.AdrSignoffCard { display: grid; gap: 10px; padding: 18px; border: 1px solid #e6eaf7; border-radius: 14px; background: #fafbff; }
+.AdrSignoffCard header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.AdrSignoffCard h4 { margin: 0; font-size: 14px; }
+.AdrSignoffCard p { margin: 0; color: var(--adr-muted); font-size: 12px; }
+.AdrSignoffBadge { display: inline-flex; padding: 4px 9px; border-radius: 999px; background: #eef0f3; color: #475467; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+.AdrSignoffBadge.signed { background: #dff7ea; color: #087443; }
+.AdrTimelineGrid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; padding: 22px 24px; }
+.AdrTimelineNote { margin: 0 24px 22px; padding: 13px 16px; border-radius: 12px; background: #f5f7fd; color: var(--adr-muted); font-size: 12px; }
+
+/* ---- Modal ---- */
+.AdrModalOverlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; background: rgba(12,13,15,.62); backdrop-filter: blur(3px); }
+.AdrModal { width: min(1080px, 100%); max-height: 91vh; display: flex; flex-direction: column; overflow: hidden; border-radius: 18px; background: #fff; box-shadow: 0 30px 90px rgba(0,0,0,.35); }
+.AdrModal header { display: flex; align-items: flex-start; justify-content: space-between; padding: 20px 24px; background: #f5f7fd; border-bottom: 1px solid #e6eaf7; }
+.AdrModal header h3 { margin: 0; font-size: 24px; } .AdrModal header p { margin: 5px 0 0; color: var(--adr-muted); font-size: 12px; }
+.AdrModal header button { width: 38px; height: 38px; border: 0; border-radius: 50%; background: var(--adr-gradient); color: #fff; cursor: pointer; font-size: 20px; }
+.AdrModalBody { overflow: auto; padding: 22px 24px; }
+.AdrModalBody h4 { margin: 0 0 12px; font-size: 15px; } .AdrModalBody h4:not(:first-child) { margin-top: 24px; }
+.AdrModal footer { display: flex; justify-content: flex-end; gap: 12px; padding: 17px 24px 22px; border-top: 1px solid #eceef1; }
+
+.EhConfirmDialog {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 28px 80px rgba(0, 0, 0, .3);
+    display: grid;
+    gap: 15px;
+    grid-template-columns: 50px 1fr;
+    padding: 22px;
+    width: min(460px, 100%);
+}
+
+.EhConfirmIcon {
+    background: var(--adr-gradient);
+    border-radius: 50%;
+    color: #fff;
+    display: grid;
+    font-size: 22px;
+    font-weight: 900;
+    height: 46px;
+    place-items: center;
+    width: 46px;
+}
+
+.EhConfirmDialog p {
+    color: var(--adr-muted);
+    margin: 0;
+}
+/* ---- Pagination ---- */
+.AdrTablePagination { min-height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 20px; border-top: 1px solid #eceef1; background: #fff; color: var(--adr-muted); font-size: 12px; font-weight: 750; }
+.AdrTablePagination > div { display: flex; align-items: center; gap: 10px; }
+.AdrTablePagination button { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 9px; background: #e7ecfb; color: var(--adr-accent-dark); cursor: pointer; font-size: 22px; font-weight: 900; line-height: 1; }
+.AdrTablePagination button:disabled { cursor: not-allowed; opacity: .38; }
+.AdrTablePagination strong { min-width: 92px; color: var(--adr-ink); font-size: 11px; text-align: center; }
+
+.AdrSidebarOverlay { display: none; }
+.left-filter-grid {
+    width: 80%;
+  }
+
+.AdrReportControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 24px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: var(--adr-shadow);
+}
+
+@media (max-width: 900px) {
+  .AdrApp { display: block; }
+  .AdrSidebar { position: fixed; inset: 0 auto 0 0; z-index: 50; width: 270px; transform: translateX(-100%); transition: transform .2s; }
+  .AdrSidebar.open { transform: none; }
+  .AdrSidebarOverlay.show { position: fixed; inset: 0; z-index: 40; display: block; background: rgba(0,0,0,.45); }
+  .AdrMenuButton { display: block; }
+  .AdrTopbar { padding: 12px 18px; }
+  .AdrPageContent { padding: 18px; }
+  .AdrStatsGrid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .AdrSignoffGrid, .AdrTimelineGrid { grid-template-columns: 1fr; }
+}
+@media (max-width: 680px) {
+  .AdrHero { align-items: flex-start; flex-direction: column; }
+  .AdrHero h2, .AdrCompactHero h3 { font-size: 26px; }
+  .AdrStatsGrid, .AdrFormGrid { grid-template-columns: 1fr; }
+  .AdrTableHeader { align-items: flex-start; flex-wrap: wrap; } .AdrAddButton { width: 100%; }
+  .AdrFormActions, .AdrModal footer { flex-direction: column; } .AdrFormActions button, .AdrModal footer button { width: 100%; }
+  .AdrModalOverlay { padding: 8px; } .AdrModal { max-height: 96vh; }
+  .AdrCompactHero { align-items: flex-start; flex-direction: column; } .AdrExportButton { width: 100%; }
+  .AdrTabs { padding: 0 12px; } .AdrTabs button { min-width: 78px; } .AdrTabs strong { font-size: 10px; }
+  .AdrTablePagination { align-items: stretch; flex-direction: column; text-align: center; } .AdrTablePagination > div { justify-content: center; }
+  .left-filter-grid {
+    width: 100%;
+  }
+  .filter-container{
+    flex-direction: column;
+  }
+}
+.user-avatar{
+  width: 30px;
+  height: 30px;
+  border-radius: 100%;
+}
+#main-content {
+  height: calc(100vh - 84px);
+  overflow-y: auto;
+}
+
+/* Select2 forced custom styles :) */
+
+.selection, .select2-search__field {
+  width: 100% !important;
+}
+/* Base container */
+
+
+/* ==========================
+   Dashboard Tabs
+========================== */
+
+#dashboard-tabs{
+    margin: 1rem 1.5rem;
+}
+
+.dashboard-tabs{
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .4rem;
+    background: #f3f4f6;
+    border-radius: 14px;
+    border: 1px solid #e7e7e7;
+    width: 100%;
+}
+
+.dashboard-tabs .tab-btn{
+    appearance: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    width: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px 22px;
+
+    font-size: .92rem;
+    font-weight: 600;
+    color: #5d6575;
+
+    background: transparent;
+
+    border-radius: 10px;
+
+    transition: all .25s ease;
+}
+
+/* Hover */
+
+.dashboard-tabs .tab-btn:hover{
+    background: rgba(184,91,39,.08);
+    color: #8C3F1D;
+}
+
+/* Active */
+
+.dashboard-tabs .tab-btn.active{
+    background: linear-gradient(135deg,#4b2b20 0%,#8C3F1D 60%,#B85B27 100%);
+    color: #fff;
+
+    box-shadow:
+        0 8px 18px rgba(140,63,29,.28);
+}
+
+/* Counter */
+
+.dashboard-tabs .tab-btn span{
+    margin-left: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+
+    border-radius: 999px;
+
+    background: rgba(255,255,255,.2);
+    color: inherit;
+
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.dashboard-tabs .tab-btn:not(.active) span{
+    background: #e8edf4;
+    color: #8C3F1D;
+}
+
+/* Focus */
+
+.dashboard-tabs .tab-btn:focus-visible{
+    outline: 2px solid #B85B27;
+    outline-offset: 2px;
+}
+
+.btn-icon {
+  background: linear-gradient(135deg,#4b2b20 0%,#8C3F1D 60%,#B85B27 100%);
+}
+
+.pagination {
+  margin-bottom: 15px;
+}
+
+.AdrField > span, .tableLabel > span {
+    display: flex;
+    gap: 3px;
+}
+
+.top-space {
+  margin-top: 5px;
+}
+
+.hidden {
+  display: none;
+}
+
+.LfrPrimaryButton {
+    background: linear-gradient(135deg, #bd5425, #7d2d12);
+    box-shadow: 0 12px 28px rgba(65, 27, 11, .25);
+    color: #fff;
+}
+
+.LfrSecondaryButton {
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(16, 24, 40, .09);
+    color: #20242c;
+}
+
+.commentContainer{
+  padding: 25px;
+}
+
+.commentContainer label {
+  width: 100%;
+}
+
+.center-text {
+  text-align: center;
+}

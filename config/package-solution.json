@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "meeting-note-client-side-solution",
+    "id": "d6565b90-a66e-4743-93e6-c21380612e54",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.20.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "meeting-note description"
+      },
+      "longDescription": {
+        "default": "meeting-note description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "meeting-note Feature",
+        "description": "The feature that activates elements of the meeting-note solution.",
+        "id": "690f2ac7-9de0-4a70-baa6-4b3e0dbc36a9",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/meeting-note.sppkg"
+  }
+}

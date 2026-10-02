@@ -1,0 +1,21 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "18.20.8",
+    "sdksVersions": {
+      "@microsoft/microsoft-graph-client": "3.0.2",
+      "@microsoft/teams-js": "2.24.0"
+    },
+    "version": "1.20.0",
+    "libraryName": "meeting-note",
+    "libraryId": "d6565b90-a66e-4743-93e6-c21380612e54",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "meeting-note",
+    "solutionShortDescription": "meeting-note description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}
