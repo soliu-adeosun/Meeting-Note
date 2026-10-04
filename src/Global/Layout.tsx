@@ -14,13 +14,13 @@ import '../Assets/css/sharepointuifix.css';
 import "../Assets/css/style.css";
 import "../Assets/css/newpage.css";
 
-// require("speedpoint_core");
-// require("workflowengine");
-// require("global");
-// require("notyf");
-// require("jQueryUI");
-// require("globalext");
-// require("select2");
+require("speedpoint_core");
+require("workflowengine");
+require("global");
+require("notyf");
+require("jQueryUI");
+require("globalext");
+require("select2");
 
 
 export const Layout = () => {

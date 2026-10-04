@@ -493,7 +493,7 @@
     .body { grid-template-columns: 1fr; }
   }
 
-  .meeting-date-label {
+  .meeting-date-label, .meeting-type-label {
     position: relative;
   }
 

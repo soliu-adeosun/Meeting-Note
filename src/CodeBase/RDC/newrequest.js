@@ -9,6 +9,7 @@ loadNewRequestComponent = function () {
 };
 
 var AppRequest;
+var customWorkflowEngine;
 
 MainApplication.NewRequestComponent.ApplicationDetails = function () {
   this.url = window.location.href;
@@ -50,7 +51,7 @@ function whenNewRequestDependeciesLoaded() {
   $spcontext.assignAttributes();
   MainApplication.CurrentPageSubmitFunction = MainApplication.NewRequestComponent.confirmSubmit;
   AppRequest = new MainApplication.NewRequestComponent.ApplicationDetails();
-  // globalDefinitions.extendStages();
+  globalDefinitions.extendStages();
 
   MainApplication.renderMeetingCategory();
   MainApplication.DateConstraints.applyToAllDateInputs();
@@ -62,6 +63,10 @@ function whenNewRequestDependeciesLoaded() {
     window.location.href,
   );
   AppRequest.mode = $spcontext.getParameterByName("mode", window.location.href);
+
+  customWorkflowEngine = new WorkflowManagerEngine(CurrentUserProperties);
+  globalDefinitions.SetWorkflowRouting(customWorkflowEngine);
+  customWorkflowEngine.routeEngine(customWorkflowEngine).setCurrentUserAsInitiator();
 
   PeoplePicker.defaultValues = {};
   PeoplePicker.initializePeoplePickers(MainApplication.staffList);
@@ -102,8 +107,8 @@ $(document).on("click", "#add-task-btn", function () {
     return;
   }
 
-  if (!task || !dueDate || !actionPlan) {
-    globalDefinitions.HandlerError("Please complete the Task, Due Date and Action Plan fields.");
+  if (!task) {
+    globalDefinitions.HandlerError("Please fill the Task space.");
     return;
   }
 
@@ -148,61 +153,6 @@ $(document).on("click", "#add-task-btn", function () {
   
 }
 
-MainApplication.NewRequestComponent.togglePullFromOtherSystem = function (value) {
-  
-
-    if (value === "Yes") {
-
-        MainApplication.renderField({
-            containerId: "pullDataContainer",
-            className: "top-space",
-            type: "textarea",
-            bindValidate: "SystemInformation",
-            placeholder: "Describe the information to be pulled...",
-            rows: 4,
-            required: true
-        });
-
-    } else {
-        $("#pullDataContainer").empty();
-    }
-}
-
-MainApplication.NewRequestComponent.toggleRelatedProcess = function (value) {
-  
-
-    if (value === "Yes") {
-
-        MainApplication.renderField({
-            containerId: "relatedProcessContainer",
-            className: "top-space",
-            type: "textarea",
-            bindValidate: "RelatedProcessInformation",
-            placeholder: "Describe the information to be pulled...",
-            rows: 4,
-            required: true
-        });
-
-    } else {
-        $("#relatedProcessContainer").empty();
-    }
-}
-
-// Request Type ("New" / "Modification") gates the whole form below it.
-// - "New" -> show the full form.
-// - "Modification" -> reveal the "Modification" (Minor/Major) selector.
-//     - "Minor" -> show only a description text area.
-//     - "Major" -> show the full form, same as "New".
-//
-// toggleMainForm() is what actually shows/hides the big form and, just as
-// importantly, strips speed-bind-validate / speed-validate-mode from
-// everything inside it while it's hidden so $spcontext.checkPassedValidation()
-// doesn't block submission on fields the user can't see. Nothing inside the
-// wrapper is touched otherwise, so whatever the user already filled in is
-// still there if they flip back to "New"/"Major".
-
-// MainApplication.NewRequestComponent.tableCtxRegistry = {};
-
 
 // stringnifyDate only ever outputs day-month-year, regardless of what
 // format string you pass it - this reorders that into yyyy-mm-dd so it
@@ -229,9 +179,6 @@ MainApplication.NewRequestComponent.toISODateInput = function (rawValue) {
     return `${year}-${month}-${day}`;
 };
 
-MainApplication.NewRequestComponent.deleteTableRow = function (ctx, pos, tableName) {
-    ctx.dynamicTableSettings[tableName].deleteRow(pos);
-};
 MainApplication.NewRequestComponent.hydrateDynamicTables = function (savedData) {
   Object.keys(savedData).forEach(function (tableName) {
     var ctx = AppRequest.tableCtxRegistry[tableName];
@@ -300,66 +247,36 @@ MainApplication.NewRequestComponent.saveDataToList = function () {
   var pickerValues = PeoplePicker.getValue();
   var people = PeoplePicker.getConfiguredValue();
 
-  formData.ExtraFeatures = MainApplication.getExtraFeatures("extraFeaturesTable");
-  formData.StepByStepProcess = JSON.stringify(formData.StepByStepProcess);
-  formData.Approvers = JSON.stringify(formData.Approvers);
-  formData.Notifications = JSON.stringify(formData.Notifications);
-  formData.UserAccess = JSON.stringify(formData.UserAccess);
-  formData.Reports = JSON.stringify(formData.Reports);
-  formData.ExtraFeatures = JSON.stringify(formData.ExtraFeatures);
+
   if ($spcontext.checkPassedValidation()) {
 
     try {
-      var delegate = pickerValues?.Delegate;
+      // var timekeeper = pickerValues?.TimeKeeper;
 
-      formData.Delegate =
-          delegate && delegate.$GI_1
-              ? delegate
-              : null;
-      formData.DivisionsInvolved = $("#divisionsInvolved").val() || [];
-      formData.DivisionsInvolved = JSON.stringify(formData.DivisionsInvolved);
-      formData.EmployeeEmail = CurrentUserProperties.email;
+      // formData.TimeKeeper =
+      //     timekeeper && timekeeper.$GI_1
+      //         ? timekeeper
+      //         : null;
+      formData.TimeKeeper = pickerValues?.TimeKeeper;
+      formData.Attendees = pickerValues?.Attendees;
+      formData.TimeOff = pickerValues?.TimeOff;
+      formData.Presenter = pickerValues?.Presenter;
+      formData.EngagementParticipant = pickerValues?.EngagementParticipant;
       
-      formData.HOD = SP.FieldUserValue.fromUser(
-        MainApplication.staffDetails[formData.EmployeeEmail].HodEmail,
-      );
-      formData.HODEmail =
-        MainApplication.staffDetails[formData.EmployeeEmail].HodEmail;
-      formData.Division =
-        MainApplication.staffDetails[formData.EmployeeEmail].Department;
+      formData.Absentees = JSON.stringify(formData.Absentees);
+      formData.Agenda = JSON.stringify(formData.Agenda);
+      formData.Discussion = JSON.stringify(formData.Discussion);
+
+      formData.StartTime = $("#start-time").val();
+      formData.EndTime = $("#end-time").val();
+      
+   
     } catch (error){};
     
+    formData.Reporter = CurrentUserProperties.title;
+    formData.Status = "Submitted";
+    formData.Title = formData.MeetingType + " - Week " + formData.MeetingWeek;
 
-    formData.Title = CurrentUserProperties.title;
-    globalDefinitions.callLoader();
-    AppRequest.returned = AppRequest.requestDetails.ReturnForCorrection;
-
-    customWorkflowEngine.updateStageByName({
-      name: globalDefinitions.stageDefinitions.hod,
-      username: MainApplication.staffDetails[formData.HODEmail].Title,
-      authenticationValue: formData.HODEmail,
-      emails: [formData.HODEmail],
-    });
-
-    if (AppRequest.mode === "correction"){
-      formData.ReturnForCorrection = "No";
-      formData = customWorkflowEngine
-      .routeEngine(customWorkflowEngine)
-      .requestHistoryHandler(formData, AppRequest.requestDetails.Transaction_History, {
-        stage: globalDefinitions.stageDefinitions.employee,
-        action: "Application Re-submitted",
-      });
-    } else {
-      formData = customWorkflowEngine
-      .routeEngine(customWorkflowEngine)
-      .requestHistoryHandler(formData, AppRequest.transactionHistory, {
-        stage: globalDefinitions.stageDefinitions.employee,
-        action: "Application Submitted",
-      });
-    }
-    formData = customWorkflowEngine
-      .routeEngine(customWorkflowEngine)
-      .runRouting(formData);
 
     globalDefinitions.onActionCompleted();
     MainApplication.NewRequestComponent.proceedToList(formData, false);
@@ -377,50 +294,28 @@ MainApplication.NewRequestComponent.saveDataToListAsDraft = function () {
     formData = $spcontext.bind({});
     var pickerValues = PeoplePicker.getValue() || {};
     var people = PeoplePicker.getConfiguredValue() || {};
-    try {
-      formData.ExtraFeatures = MainApplication.getExtraFeatures("extraFeaturesTable") || {};
-      formData.StepByStepProcess = JSON.stringify(formData.StepByStepProcess) || {};
-      formData.Approvers = JSON.stringify(formData.Approvers) || {};
-      formData.Notifications = JSON.stringify(formData.Notifications) || {};
-      formData.UserAccess = JSON.stringify(formData.UserAccess) || {};
-      formData.Reports = JSON.stringify(formData.Reports) || {};
-      formData.ExtraFeatures = JSON.stringify(formData.ExtraFeatures) || {};
-      // if (formData.DateRequired) {
-      // formData.DateRequired = $spcontext.stringnifyDate({
-      //     value: formData.DateRequired,
-      //     includeTime: false,
-      //     format: "dd-mm-yy",
-      // });
-      // } else {
-      //     formData.DateRequired = null;
-      // }
+     try {
+      formData.TimeKeeper = pickerValues?.TimeKeeper;
+      formData.Attendees = pickerValues?.Attendees;
+      formData.TimeOff = pickerValues?.TimeOff;
+      formData.Presenter = pickerValues?.Presenter;
+      formData.EngagementParticipant = pickerValues?.EngagementParticipant;
+      
+      formData.Absentees = JSON.stringify(formData.Absentees);
+      formData.Agenda = JSON.stringify(formData.Agenda);
+      formData.Discussion = JSON.stringify(formData.Discussion);
 
-      var delegate = pickerValues?.Delegate;
-
-      formData.Delegate =
-          delegate && delegate.$GI_1
-              ? delegate
-              : null;
-      formData.DivisionsInvolved = $("#divisionsInvolved").val() || [];
-      formData.DivisionsInvolved = JSON.stringify(formData.DivisionsInvolved) || {};
-    } catch (error) {};
-    formData.EmployeeEmail = CurrentUserProperties.email;
+      formData.StartTime = $("#start-time").val();
+      formData.EndTime = $("#end-time").val();
+      
+   
+    } catch (error){};
     
-    formData.HOD = SP.FieldUserValue.fromUser(
-      MainApplication.staffDetails[formData.EmployeeEmail].HodEmail,
-    );
-    formData.HODEmail =
-      MainApplication.staffDetails[formData.EmployeeEmail].HodEmail;
-    formData.Division =
-      MainApplication.staffDetails[formData.EmployeeEmail].Department;
-
-    formData.Title = CurrentUserProperties.title;
+    formData.Reporter = CurrentUserProperties.title;
+    formData.Title = formData.MeetingType + " - Week " + formData.MeetingWeek;
+    formData.Status = "Draft";
     globalDefinitions.callLoader();
 
-    formData = customWorkflowEngine.routeEngine(customWorkflowEngine).runRouting(formData, AppRequest.defaultStage, globalDefinitions.stageDefinitions.save);
-    formData.Approval_Status = globalDefinitions.stageDefinitions.save;
-    formData.Current_Approver = globalDefinitions.stageDefinitions.employee;
-    globalDefinitions.onActionCompleted();
     console.log("Data at SaveAsDraft: ", formData);
     MainApplication.NewRequestComponent.proceedToList(formData, false);
 } else {
@@ -431,66 +326,38 @@ MainApplication.NewRequestComponent.saveDataToListAsDraft = function () {
 }
 MainApplication.NewRequestComponent.proceedToList = function (formData) {
   
-	var Attachments = $spcontext.grabAllAttachments();
-	//used to grab all string links so that it can be updated.
-	//mostly used when return for more information is part of the workflow process
-	AppRequest.FileUrls = $spcontext.grabAllAttachmentsLinks();
-	globalDefinitions.uploadAttachment(speedctxRoot, Attachments, globalDefinitions.stageDefinitions.foldername, globalDefinitions.stageDefinitions.documentlib, function () {
 		if (AppRequest.itemId == null) {
+      var dateCreatedCode = $spcontext.stringnifyDate({
+        includeTime: true,
+        timeSpace: false,
+        format: "dd-mm-yy",
+      });
+
+      formData.ReferenceID = globalDefinitions.stageDefinitions.workflowcode + dateCreatedCode;
+
       console.log("New data about to be created: ", formData);
 			speedctxRoot.createItems([formData], globalDefinitions.stageDefinitions.listname, function (createdItemsProperties) {
-				var itemID = createdItemsProperties[0].get_id();
-				var updateObj = {};
-				updateObj.ID = itemID;
-				// var dateCreatedCode = $spcontext.stringnifyDate({
-				// 	includeTime: true,
-				// 	timeSpace: false,
-				// 	format: "dd-mm-yy",
-				// });
-				// dateCreatedCode = itemID + "_" + dateCreatedCode.replace(/-/g, "");
-				updateObj.WorkflowRequestID = globalDefinitions.stageDefinitions.workflowcode + itemID;
-
-				AppRequest.requestDetails = formData;
-				AppRequest.requestDetails.WorkflowRequestID = updateObj.WorkflowRequestID;
-				if (!jQuery.isEmptyObject(AppRequest.AttachmentLoader)) {
-					updateObj.Attachment_Folder = AppRequest.AttachmentLoader.Attachmentfolder;
-					updateObj.AttachmentURL = AppRequest.AttachmentLoader.Attachmentlinks;
-				}
-        updateObj.RequestCreated = $spcontext.serverDate();
-				updateObj.Year = $spcontext.serverDate().getFullYear();
-        updateObj.Month = $spcontext.serverDate().getMonth();
-				updateObj.LastTimeItemModifiedByWorklow = $spcontext.serverDate();
-				updateObj.SLA_COUNT_UPDATED = "No";
-
-				speedctxRoot.updateItems([updateObj], globalDefinitions.stageDefinitions.listname, function () {
-          if (AppRequest.actionTaken === "submit") {
-            globalDefinitions.HandlerSuccess(`Request submitted successfully`);
+         if (AppRequest.actionTaken === "submit") {
+            globalDefinitions.HandlerSuccess(`Note created successfully`);
             $spcontext.redirect("#/", false);
             globalDefinitions.closeLoader();
 
             globalDefinitions.AuditLogManager_SaveLog({
-              Action: `Submitted Request  ${AppRequest.requestDetails.WorkflowRequestID}`,
+              Action: `Submitted Note  ${formData.ReferenceID}`,
             });
 					// });
           } else {
-            globalDefinitions.HandlerSuccess(`Request saved as draft successfully`);
+            globalDefinitions.HandlerSuccess(`Note saved as draft successfully`);
             $spcontext.redirect("#/", false);
             globalDefinitions.closeLoader();
             globalDefinitions.AuditLogManager_SaveLog({
-              Action: `Saved Request  ${AppRequest.requestDetails.WorkflowRequestID}`,
+              Action: `Saved Note  ${formData.ReferenceID}`,
             });
           }
-				});
 			});
 		} else {
       console.log("New data about to be updated: ", formData);
 			formData.ID = AppRequest.requestDetails.ID;
-			formData.AttachmentURL = JSON.stringify(AppRequest.FileUrls);
-      // formData.DateRequired = $spcontext.stringnifyDate({
-      //     value: formData.DateRequired,
-      //     includeTime: false,
-      //     format: "dd/mm/yy",
-      // });
 
 			speedctxRoot.updateItems([formData], globalDefinitions.stageDefinitions.listname, function () {
 				// if (AppRequest.requestDetails.ReturnForCorrection !== "Yes") {
@@ -498,26 +365,26 @@ MainApplication.NewRequestComponent.proceedToList = function (formData) {
 				// }
 
 				if (AppRequest.actionTaken === "submit") {
-            globalDefinitions.HandlerSuccess(`Request submitted successfully`);
+            globalDefinitions.HandlerSuccess(`Note created successfully`);
             $spcontext.redirect("#/", false);
             globalDefinitions.closeLoader();
 
             globalDefinitions.AuditLogManager_SaveLog({
-              Action: `Submitted Request  ${AppRequest.requestDetails.WorkflowRequestID}`,
+              Action: `Submitted Note  ${formData.ReferenceID}`,
             });
 					// });
           } else {
-            globalDefinitions.HandlerSuccess(`Request saved as draft successfully`);
+            globalDefinitions.HandlerSuccess(`Note saved as draft successfully`);
             $spcontext.redirect("#/", false);
             globalDefinitions.closeLoader();
             globalDefinitions.AuditLogManager_SaveLog({
-              Action: `Saved Request  ${AppRequest.requestDetails.WorkflowRequestID}`,
+              Action: `Saved Note  ${formData.ReferenceID}`,
             });
           }
 			});
 		}
     globalDefinitions.onActionCompleted();
-	});
+
 };
 
 
@@ -531,7 +398,7 @@ MainApplication.NewRequestComponent.recoverListData = function () {
 
       {
         operator: "Eq",
-        field: "WorkflowRequestID",
+        field: "ReferenceID",
         type: "Text",
         val: AppRequest.itemId,
       },
@@ -554,7 +421,7 @@ MainApplication.NewRequestComponent.recoverListData = function () {
     var extraProperties = [
       "ID",
       "Title",
-      "WorkflowRequestID",
+      "ReferenceID",
       "Current_Approver",
       "Current_Approver_Code",
       "Approval_Status",
@@ -595,7 +462,7 @@ MainApplication.NewRequestComponent.recoverListData = function () {
       "Notifications",
       "UserAccess",
       "Reports",
-      "Delegate",
+      "TimeKeeper",
       "RequirementStatement",
       "JustificationStatement",
       "DateRequired",
@@ -698,8 +565,8 @@ MainApplication.NewRequestComponent.recoverListData = function () {
                         "object",
                       );
 
-                      // was: listProperties.Delegate = listProperties.Delegate.email;
-listProperties.Delegate = (listProperties.Delegate && (listProperties.Delegate.email || listProperties.Delegate.value)) || "";
+                      // was: listProperties.TimeKeeper = listProperties.TimeKeeper.email;
+listProperties.TimeKeeper = (listProperties.TimeKeeper && (listProperties.TimeKeeper.email || listProperties.TimeKeeper.value)) || "";
 
                       AppRequest.FolderUrl = listProperties.Attachment_Folder;
                       AppRequest.FileUrls = $spcontext.deferenceObject(
@@ -813,7 +680,7 @@ listProperties.Delegate = (listProperties.Delegate && (listProperties.Delegate.e
                             $('[speed-bind-validate="DateRequired"]').val(listProperties.DateRequired);
                           }
                         }
-                        PeoplePicker.setDefault("Delegate", listProperties.Delegate);
+                        PeoplePicker.setDefault("TimeKeeper", listProperties.TimeKeeper);
                         PeoplePicker.initializePeoplePickers(MainApplication.staffList);
                         $("#newrequest-page").removeClass("hidden");
                         $("#newLoader").hide();
@@ -824,7 +691,7 @@ listProperties.Delegate = (listProperties.Delegate && (listProperties.Delegate.e
                         "You are not allowed to access this request",
                       );
                       globalDefinitions.AuditLogManager_SaveLog({
-                        Action: `Unauthorized action on ${listProperties.WorkflowRequestID}`,
+                        Action: `Unauthorized action on ${listProperties.ReferenceID}`,
                         Message: "User is not allowed to view this request",
                       });
                       // setTimeout(function () {
@@ -1135,3 +1002,10 @@ MainApplication.NewRequestComponent.renderActionItems = function () {
   `);
 };
 
+MainApplication.NewRequestComponent.createNonConformanceItem = function(nonConformanceData) {
+    speedctxRoot.createItems([nonConformanceData], "NonConformanceRegister", function() {
+        globalDefinitions.AuditLogManager_SaveLog({
+            Action: `created non-conformance item for request ${nonConformanceData.Title}`
+        });
+    });
+}

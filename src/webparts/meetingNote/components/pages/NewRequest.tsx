@@ -54,17 +54,20 @@ export default class NewRequest extends React.Component<{}, {}> {
                       <span className="required">*</span>
                     </span>
                     <div className="time-pair">
-                      <input type="time" id="start-time" speed-bind-validate="StartTime" />
-                      <input type="time" id="end-time" speed-bind-validate="EndTime" />
+                      <input type="time" id="start-time" />
+                      <input type="time" id="end-time" />
                     </div>
                   </label>
 
                   <label className="AdrField">
                     <span className="meeting-date-label">
-                      Duration
+                      Time Keeper
                       <span className="required">*</span>
                     </span>
-                    <input type="text" id="duration" readOnly speed-bind-validate="Duration" />
+                    <CustomPeoplePicker
+                        validate-control="false"
+                        custom-people="TimeKeeper"
+                      />
                   </label>
                 </div>
               </section>
@@ -135,6 +138,7 @@ export default class NewRequest extends React.Component<{}, {}> {
                             validate-control="true"
                             custom-people="Presenter"
                             speed-validate-msg="Please select a presenter"
+                            multiple
                           />
                       </div>
                     </div>

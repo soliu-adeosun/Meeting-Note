@@ -35,6 +35,9 @@ MainApplication.DashboardComponent.ApplicationDetails = function () {
 
 whenDashboardDependeciesLoaded = function () {
   console.log("Dashboard component loaded");
+  $("#newLoader").hide();
+  $("#dashboard-page").removeClass("hidden");
+  globalDefinitions.closeLoader();
 }
 whenDashboardDependeciesLoadedxxxxxxx = function () {
   // globalDefinitions.callLoader();

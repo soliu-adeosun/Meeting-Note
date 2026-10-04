@@ -9,7 +9,7 @@ GlobalDefinitionsManager.prototype.extendStages = function () {
     this.stageDefinitions.admin = configProperties.REPORTADMIN.setting;
     this.stageDefinitions.documentlib = configProperties.LIBRARY.setting;
     this.stageDefinitions.foldername = configProperties.FOLDER.setting;
-    this.stageDefinitions.listname = configProperties.APPDEVLIST.setting;
+    this.stageDefinitions.listname = configProperties.MTNNOTELIST.setting;
 
     this.stageDefinitions.employee = "Employee";
     this.stageDefinitions.hod = "HOD";
