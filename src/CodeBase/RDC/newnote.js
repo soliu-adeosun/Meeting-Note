@@ -789,6 +789,7 @@ MainApplication.NewNoteComponent.createMeetingTasks = function (
       Task: item.Task,
       DueDate: item.DueDate,
       ActionPlan: item.ActionPlans || "",
+      Status: "Not Started",
     };
   });
 

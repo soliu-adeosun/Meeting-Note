@@ -569,7 +569,7 @@ MainApplication.reportSyncSearch = function (keyquery, data) {
       item.EmployeeEmail?.toLowerCase().includes(keyquery) ||
       item.Approval_Status?.toLowerCase().includes(keyquery) ||
       item.Current_Approver?.toLowerCase().includes(keyquery) ||
-      item.RDC_Status?.toLowerCase().includes(keyquery),
+      item.Task?.toLowerCase().includes(keyquery),
   );
 };
 

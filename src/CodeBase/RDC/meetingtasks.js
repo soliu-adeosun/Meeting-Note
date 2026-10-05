@@ -183,17 +183,6 @@ MainApplication.MeetingTasksComponent.exportToExcel = function () {
     );
     dataString.push(itemProperties.Status);
 
-    // dataString.push(
-    //   $spcontext.stringnifyDate({
-    //     value: itemProperties.DateOfViolation,
-    //     includeTime: false,
-    //   }),
-    // );
-    // dataString.push(itemProperties.Severity);
-    // dataString.push(itemProperties.Location);
-
-    /*
-        dataString.push(delegateEmail);*/
     excelData += dataString.toString() + "\n";
     excelData = "\uFEFF" + excelData;
   });
