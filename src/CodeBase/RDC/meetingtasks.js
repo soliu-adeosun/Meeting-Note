@@ -1,56 +1,28 @@
 loadMeetingTasksComponent = function () {
   if (MainApplication.cachedState.mode) {
-    // whenMeetingTasksDependeciesLoaded();
-    meetingTasks();
+    whenMeetingTasksDependeciesLoaded();
   } else {
     MainApplication.cachedState.pageStateCall = loadMeetingTasksComponent;
   }
 };
 
-// var AppRequest;
+var AppRequest;
 
-// var customWorkflowEngine;
-
-// MainApplication.MeetingTasksComponent.ApplicationDetails = function () {
-//   this.url = window.location.href;
-//   this.itemId = null;
-//   this.mode = null;
-//   this.requestDetails = {};
-//   this.Attachments = [];
-//   this.FileUrls = {};
-//   this.FolderUrl = "";
-//   this.AttachmentLoader = {};
-//   this.messageTemplate = {};
-//   this.feedback = false;
-//   this.approverComments = "";
-//   this.transactionHistory = [];
-//   this.defaultStage = "AA0";
-//   this.returned = null;
-//   this.sectionArr = [];
-//   this.sections = {};
-//   this.finalrating = [];
-//   this.questionSetCounter = 0;
-//   this.groupProperties = {};
-//   this.nonConformanceCounter = 1;
-// };
-meetingTasks = function () {
-  $("#newLoader").hide();
-  $("#meetingtasks-page").removeClass('hidden');
-  console.log("Meeting Tasks Page loaded");
+MainApplication.MeetingTasksComponent.ApplicationDetails = function () {
+  this.fullTableData = [];
+  this.dataForExport = [];
 }
+
 whenMeetingTasksDependeciesLoaded = function () {
   // console.log("MeetingTasks Dependencies Loaded");
-  // globalDefinitions.callLoader();
-  globalDefinitions.extendStages();
   globalDefinitions.sortResponse();
 
   // $("#requeststrDate").datepicker({ dateFormat: 'yy-mm-dd', beforeShow: function () { jQuery(this).datepicker('option', 'maxDate', $('#requestendDate').val()); } });
   // $("#requestendDate").datepicker({ dateFormat: 'yy-mm-dd', beforeShow: function () { jQuery(this).datepicker('option', 'minDate', $('#requeststrDate').val()); } });
-  AppRequest = new MainApplication.NewRequestComponent.ApplicationDetails();
+  AppRequest = new MainApplication.MeetingTasksComponent.ApplicationDetails();
   AppRequest.fullTableData = [];
   AppRequest.dataForExport = [];
 
-  customWorkflowEngine = new WorkflowManagerEngine(CurrentUserProperties);
 
   speedctxRoot.DataForTable.tablecontentId = "speed-data-table";
   speedctxRoot.DataForTable.pagesize = 20;
@@ -61,21 +33,22 @@ whenMeetingTasksDependeciesLoaded = function () {
   speedctxRoot.DataForTable.paginationuId = "toppagination";
 
   speedctxRoot.DataForTable.propertiesHandler = {
-    Modified: function (valueToEva) {
+    Task: function (valueToEva) {
       var viewStr = `
-                <a href="#/viewrequest?itemId=${valueToEva.WorkflowRequestID}" class="btn btn-sm btn-primary btn-icon">
-                    <i class="fa-solid fa-eye" style="font-size:11px"></i>
+                <a href="#/viewtask?itemId=${valueToEva.ReferenceID}">
+                    ${valueToEva.Task}
                 </a>`;
 
       return viewStr;
     },
+    DueDate: function (valueToEva) {
+      return $spcontext.stringnifyDate({
+        value: valueToEva.DueDate,
+        includeTime: false,
+        format: "dd/mm/yy",
+      });
+    }
   };
-
-  // $("#searchbtn").click(() => {
-  //     MainApplication.MeetingTasksComponent.retrieveRequest();
-  // });
-
-  // let debounceTimer;
 
   $("#status-filter").on("keyup change", function () {
     var searchQuery = $(this).val();
@@ -95,103 +68,53 @@ whenMeetingTasksDependeciesLoaded = function () {
     MainApplication.MeetingTasksComponent.showTableData(filteredItems);
   });
 
+  MainApplication.MeetingTasksComponent.retrieveRequest();
 
-
-  // if (MainApplication.isUserAnActor) {
-    MainApplication.MeetingTasksComponent.retrieveRequest();
-  // } else {
-  //   globalDefinitions.HandlerError(
-  //     "You are not authorized to access this page...",
-  //   );
-  //   $spcontext.redirect("#/", false);
-  //   globalDefinitions.closeLoader();
-  // }
-  // setTimeout(function () {
-  //     globalDefinitions.closeLoader();
-  //     $("#report-page").addClass("active");
-  //     $("#newLoader").hide();
-  // }, 2000);
 };
 
 MainApplication.MeetingTasksComponent.retrieveRequest = function () {
-  // globalDefinitions.callLoader();
-  // var reportQuery = [
-  //   {
-  //     ascending: "FALSE",
-  //     orderby: "Modified",
-  //     viewScope: "RecursiveAll",
-  //   },
-  // ];
 
-  // reportQuery = speedctxRoot.formQueryArrayGenerator(reportQuery);
-
-  // var query = speedctxRoot.camlBuilder(reportQuery);
+  var name1 = MainApplication.staffDetails[CurrentUserProperties.email].Title;
+  var name2 = MainApplication.staffDetails[CurrentUserProperties.email].Department;
   var query = `<View Scope="RecursiveAll">
-               <Query>
-                 <OrderBy>
-                   <FieldRef Name="Modified" Ascending="FALSE"/>
-                 </OrderBy>
-               </Query>
-             </View>`;
+    <Query>
+      <Where>
+        <Or>
+          <Eq>
+            <FieldRef Name="Name"/>
+            <Value Type="Text">${name1}</Value>
+          </Eq>
+          <Eq>
+            <FieldRef Name="Name"/>
+            <Value Type="Text">${name2}</Value>
+          </Eq>
+        </Or>
+      </Where>
+      <OrderBy>
+        <FieldRef Name="Modified" Ascending="FALSE"/>
+      </OrderBy>
+    </Query>
+  </View>`;
   var extraProperties = {
     merge: true,
     data: [
       "ID",
       "Title",
-      "WorkflowRequestID",
-      "Current_Approver",
-      "Current_Approver_Code",
-      "Approval_Status",
+      "Name",
+      "Email",
+      "Task",
+      "DueDate",
 
-      "RequestCreated",
-      "InitiatorEmailAddress",
-      "InitiatorLogin",
-      "Transaction_History",
-      "ReturnForCorrection",
+      "ActionPlan",
+      "ReferenceID",
+      "Status",
 
       "Modified",
-      "PendingUserEmail",
-      "PendingUserLogin",
-      "Attachment_Folder",
-      "AttachmentURL",
-      "Comment",
-      "HOD",
-      "Division",
-      "ProcessName",
-      "Modified",
-      "IsApprovalsNeeded",
-      "ConditionalApproval",
-      "RetentionPeriod",
-      "ReasonForAutomation",
-      "Period",
-      "DivisionsInvolved",
-      "StepByStepProcess",
-      "ExistingLink",
-      "PainPoints",
-      "CriteriaForCompletion",
-      "IsProcessRelated",
-      "PullDataFromAnotherSystem",
-      "Approvers",
-      "MaxApprovalTime",
-      "RevokeUser",
-      "ProcessOwner",
-      "OtherFeatures",
-      "ExtraFeatures",
-      "Notifications",
-      "UserAccess",
-      "MeetingTaskss",
-      "Delegate",
-      "RequirementStatement",
-      "JustificationStatement",
-      "DateRequired",
-      "RelatedProcessInformation",
-      "SystemInformation",
-      "ConditionalApprovalInformation"
     ],
   };
 
   speedctxRoot.getListToItems(
-    configProperties.APPDEVLIST.setting,
+    "MeetingNoteTasks",
     query,
     extraProperties,
     true,
@@ -201,11 +124,11 @@ MainApplication.MeetingTasksComponent.retrieveRequest = function () {
       AppRequest.fullTableData = tableData;
 
       var completedItems = tableData.filter(function (item) {
-        return item.Approval_Status === "Completed";
+        return item.Status === "Completed";
       });
 
       var pendingItems = tableData.filter(function (item) {
-        return item.Approval_Status === "Pending";
+        return item.Status === "In Progress";
       });
       
 
@@ -232,19 +155,17 @@ MainApplication.MeetingTasksComponent.showTableData = function (tableData) {
     speedctxRoot.manualTable(tableData);
   }
   $("#newLoader").hide();
-  $("#report-page").removeClass("hidden");
+  $("#meetingtasks-page").removeClass("hidden");
   globalDefinitions.closeLoader();
 };
 
 MainApplication.MeetingTasksComponent.exportToExcel = function () {
   var excelName =
-    "AppDeveklopmentMeetingTasks" + $spcontext.stringnifyDate() + ".csv";
+    "MeetingNoteTasks" + $spcontext.stringnifyDate() + ".csv";
   var dataStringHeader = [
-    "Ref ID",
-    "Process Name",
-    "Requestor",
-    "Division",
-    "Next Approver",
+    "Description",
+    "Task Category",
+    "Due Date",
     "Status",
   ];
 
@@ -252,12 +173,15 @@ MainApplication.MeetingTasksComponent.exportToExcel = function () {
 
   $.each(AppRequest.dataForExport, function (index, itemProperties) {
     var dataString = [];
-    dataString.push(itemProperties.WorkflowRequestID);
-    dataString.push(itemProperties.ProcessName);
+    dataString.push(itemProperties.Task);
     dataString.push(itemProperties.Title);
-    dataString.push(itemProperties.Division);
-    dataString.push(itemProperties.Current_Approver);
-    dataString.push(itemProperties.Approval_Status);
+    dataString.push(
+      $spcontext.stringnifyDate({
+        value: itemProperties.DueDate,
+        includeTime: false,
+      }),
+    );
+    dataString.push(itemProperties.Status);
 
     // dataString.push(
     //   $spcontext.stringnifyDate({

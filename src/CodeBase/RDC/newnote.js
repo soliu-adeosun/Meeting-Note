@@ -1220,17 +1220,7 @@ MainApplication.NewNoteComponent.parseSavedJSON = function (value) {
 };
 
 MainApplication.NewNoteComponent.normalizePeopleEmails = function (value) {
-  /*
-   * Accepts any shape people data may have been stored in:
-   *   - "user@x.com"
-   *   - ["user@x.com", ...]
-   *   - [{ email|Email|value|Key }, ...]
-   *   - JSON strings of the above
-   *   - SP.FieldUserValue-like objects
-   * Returns a de-duplicated array of lowercase emails (or a single string
-   * for single-value pickers when only one value is present is still an array;
-   * callers decide).
-   */
+
   if (value == null || value === "") return [];
 
   if (typeof value === "string") {

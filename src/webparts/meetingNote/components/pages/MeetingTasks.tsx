@@ -13,29 +13,20 @@ export default class MeetingTasks extends React.Component<{}, {}> {
           <div className="AdrPage">
             <section className="AdrStatsGrid">
               <article>
-                <span>Total Requests</span>
+                <span>Total Tasks</span>
                 <strong id="totalRequest"></strong>
-                <p>All saved and submitted requests</p>
               </article>
               <article>
-                <span>Pending Approval</span>
+                <span>Pending Tasks</span>
                 <strong id="pendingRequest"></strong>
-                <p>Awaiting approvals</p>
               </article>
               <article>
-                <span>Closed</span>
+                <span>Closed Tasks</span>
                 <strong id="completedRequest"></strong>
-                <p>Fully signed off / Closed</p>
               </article>
             </section>
 
             <section className="AdrPanel">
-              <div className="AdrPanelHeader">
-                <div>
-                  <h3>Recent Requests</h3>
-                  <p>Most recently submitted requests across all divisions</p>
-                </div>
-              </div>
 
               <div className="AdrReportControls filter-container" role="tabpanel">
                 <div className="AdrFormGrid left-filter-grid" >
@@ -43,14 +34,13 @@ export default class MeetingTasks extends React.Component<{}, {}> {
                     <span>Status</span>
                     <select id="status-filter" speed-bind-query="Approval_Status" speed-operator="Eq">
                       <option value="">All</option>
-                      <option value="Draft">Draft</option>
-                      <option value="Pending">Pending</option>
+                      <option value="Not Started">Not Started</option>
+                      <option value="In Progress">In Progress</option>
                       <option value="Completed">Completed</option>
-                      <option value="Declined">Declined</option>
                     </select>
                   </label>
                   <label className="AdrField">
-                    <span>Requestor / Ref ID</span>
+                    <span>Task Description</span>
                     <input placeholder="Search records"  id="searchInput"/>
                   </label>
                 </div>
@@ -68,8 +58,7 @@ export default class MeetingTasks extends React.Component<{}, {}> {
                       <tr>
                         <th>S/N</th>
                         <th speed-table-data="Task">Description</th>
-                        <th speed-table-data="MeetingCategory">Meeting Category</th>
-                        <th speed-table-data="MeetingType">Meeting Type</th>
+                        <th speed-table-data="Title">Task Category</th>
                         <th speed-table-data="DueDate">Due Date</th>
                         <th speed-table-data="Status">Status</th>
                       </tr>
