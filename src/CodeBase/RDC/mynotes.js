@@ -1,15 +1,22 @@
-loadViewRequestComponent = function () {
+loadMyNotesComponent = function () {
   if (MainApplication.cachedState.mode) {
-    whenViewRequestDependeciesLoaded();
+    // whenMyNotesDependeciesLoaded();
+    myNotes();
   } else {
-    MainApplication.cachedState.pageStateCall = loadViewRequestComponent;
+    MainApplication.cachedState.pageStateCall = loadMyNotesComponent;
   }
 };
 
 var AppRequest;
 var customWorkflowEngine;
 
-MainApplication.ViewRequestComponent.ApplicationDetails = function () {
+myNotes = function () {
+  $("#newLoader").hide();
+  $("#mynotes-page").removeClass("hidden");
+  console.log("My Notes page loaded");
+}
+
+MainApplication.MyNotesComponent.ApplicationDetails = function () {
   this.url = window.location.href;
 	this.itemId = null;
 	this.requestDetails = {};
@@ -28,14 +35,14 @@ MainApplication.ViewRequestComponent.ApplicationDetails = function () {
 	this.mode = null;
 };
 
-whenViewRequestDependeciesLoaded = function () {
+whenMyNotesDependeciesLoaded = function () {
   // globalDefinitions.callLoader();
   // globalDefinitions.extendStages();
   $spcontext.assignAttributes();
 
   $spcontext.filesDictionary = {};
 
-  AppRequest = new MainApplication.ViewRequestComponent.ApplicationDetails();
+  AppRequest = new MainApplication.MyNotesComponent.ApplicationDetails();
   globalDefinitions.extendStages();
   customWorkflowEngine = new WorkflowManagerEngine(CurrentUserProperties);
   globalDefinitions.SetWorkflowRouting(customWorkflowEngine);
@@ -74,13 +81,13 @@ whenViewRequestDependeciesLoaded = function () {
         globalDefinitions.HandlerError(errors.msg, false);
     });
   $spcontext.applyValidationEvents();
-  MainApplication.ViewRequestComponent.recoverListData();
+  MainApplication.MyNotesComponent.recoverListData();
   // setTimeout(function () {
   //   globalDefinitions.closeLoader();
   // }, 2000);
 };
 
-MainApplication.ViewRequestComponent.recoverListData = function () {
+MainApplication.MyNotesComponent.recoverListData = function () {
   if (AppRequest.itemId !== null && AppRequest.itemId !== "") {
     var query = speedctxRoot.camlBuilder([
       {
@@ -420,7 +427,7 @@ listProperties.Delegate = (listProperties.Delegate && listProperties.Delegate.va
   }
 };
 
-// MainApplication.ViewRequestComponent.buildViewOnlyInspectionTable = function () {
+// MainApplication.MyNotesComponent.buildViewOnlyInspectionTable = function () {
 //     const data = AppRequest.retrievedtableData;
 //     if (!data || !data.Monday || !data.Tuesday) {
 //         console.warn("No inspection data available");

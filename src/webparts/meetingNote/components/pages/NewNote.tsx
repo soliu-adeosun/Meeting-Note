@@ -7,9 +7,9 @@ import CustomPeoplePicker from "../../../../Global/CustomPeoplePicker";
 import { NewLoader } from "../../../../Global/NewLoader";
 // import "../../../../Assets/css/newpage.css";
 
-require("newrequest");
+require("newnote");
 
-export default class NewRequest extends React.Component<{}, {}> {
+export default class NewNote extends React.Component<{}, {}> {
   public render(): React.ReactElement {
     return (
       <>
@@ -286,7 +286,7 @@ export default class NewRequest extends React.Component<{}, {}> {
                 Cancel
               </a>
               <ClientButton
-                func="NewRequestComponent.confirmSubmit"
+                func="NewNoteComponent.confirmSubmit"
                 clax="AdrSecondaryButton draftbtn"
                 prop="Draft"
                 attr="id='draftbtn"
@@ -295,7 +295,7 @@ export default class NewRequest extends React.Component<{}, {}> {
               </ClientButton>
 
               <ClientButton
-                func="NewRequestComponent.confirmSubmit"
+                func="NewNoteComponent.confirmSubmit"
                 clax="AdrPrimaryButton"
                 prop="submit"
                 attr=""
@@ -310,6 +310,6 @@ export default class NewRequest extends React.Component<{}, {}> {
   }
 
   public componentDidMount(): void {
-    window.loadNewRequestComponent();
+    window.loadNewNoteComponent();
   }
 }

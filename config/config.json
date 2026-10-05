@@ -123,54 +123,54 @@
         "main"
       ]
     },
-    "newrequest": {
-      "path": "src/codebase/rdc/newrequest.js",
-      "globalName": "newrequest",
+    "newnote": {
+      "path": "src/codebase/rdc/newnote.js",
+      "globalName": "newnote",
       "globalDependencies": [
         "global",
         "speedpoint_core",
         "main"
       ]
     },
-    "viewrequest": {
-      "path": "src/codebase/rdc/viewrequest.js",
-      "globalName": "viewrequest",
+    "meetingtasks": {
+      "path": "src/codebase/rdc/meetingtasks.js",
+      "globalName": "meetingtasks",
       "globalDependencies": [
         "global",
         "speedpoint_core",
         "main"
       ]
     },
-    "approverequest": {
-      "path": "src/codebase/rdc/approverequest.js",
-      "globalName": "approverequest",
+    "previousnotes": {
+      "path": "src/codebase/rdc/previousnotes.js",
+      "globalName": "previousnotes",
       "globalDependencies": [
         "global",
         "speedpoint_core",
         "main"
       ]
     },
-    "report": {
-      "path": "src/codebase/rdc/report.js",
-      "globalName": "report",
+    "mynotes": {
+      "path": "src/codebase/rdc/mynotes.js",
+      "globalName": "mynotes",
       "globalDependencies": [
         "global",
         "speedpoint_core",
         "main"
       ]
     },
-    "analytics": {
-      "path": "src/codebase/rdc/analytics.js",
-      "globalName": "analytics",
+    "viewnote": {
+      "path": "src/codebase/rdc/viewnote.js",
+      "globalName": "viewnote",
       "globalDependencies": [
         "global",
         "speedpoint_core",
         "main"
       ]
     },
-    "reviewqueue": {
-      "path": "src/codebase/rdc/reviewqueue.js",
-      "globalName": "reviewqueue",
+    "viewtask": {
+      "path": "src/codebase/rdc/viewtask.js",
+      "globalName": "viewtask",
       "globalDependencies": [
         "global",
         "speedpoint_core",

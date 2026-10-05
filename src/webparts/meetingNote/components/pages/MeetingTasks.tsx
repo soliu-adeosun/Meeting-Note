@@ -2,14 +2,14 @@ import * as React from "react";
 import { NewLoader } from "../../../../Global/NewLoader";
 // import { NewLoader } from "../../../../Global/NewLoader";
 // import { FilterBox } from "../../../../Global/FilterBox";
-require("report");
+require("meetingtasks");
 
-export default class Report extends React.Component<{}, {}> {
+export default class MeetingTasks extends React.Component<{}, {}> {
   public render(): React.ReactElement {
     return (
       <>
         <NewLoader />
-        <div className="hidden" id="report-page">
+        <div className="hidden" id="meetingtasks-page">
           <div className="AdrPage">
             <section className="AdrStatsGrid">
               <article>
@@ -67,13 +67,11 @@ export default class Report extends React.Component<{}, {}> {
                     <thead>
                       <tr>
                         <th>S/N</th>
-                        <th speed-table-data="WorkflowRequestID">Ref ID</th>
-                        <th speed-table-data="ProcessName">Process Name</th>
-                        <th speed-table-data="Title">Requestor</th>
-                        <th speed-table-data="Division">Division</th>
-                        <th speed-table-data="Current_Approver">Next Approver</th>
-                        <th speed-table-data="Approval_Status">Status</th>
-                        <th speed-table-data="Modified">Action</th>
+                        <th speed-table-data="Task">Description</th>
+                        <th speed-table-data="MeetingCategory">Meeting Category</th>
+                        <th speed-table-data="MeetingType">Meeting Type</th>
+                        <th speed-table-data="DueDate">Due Date</th>
+                        <th speed-table-data="Status">Status</th>
                       </tr>
                     </thead>
                     <tbody id="speed-data-table"></tbody>
@@ -89,6 +87,6 @@ export default class Report extends React.Component<{}, {}> {
   }
 
   public componentDidMount(): void {
-    window.loadReportComponent();
+    window.loadMeetingTasksComponent();
   }
 }

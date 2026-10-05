@@ -1,8 +1,9 @@
-loadDashboardComponent = function () {
+loadViewNote = function () {
   if (MainApplication.cachedState.mode) {
-    whenDashboardDependeciesLoaded();
+    // whenViewNoteDependeciesLoaded();
+    viewNote();
   } else {
-    MainApplication.cachedState.pageStateCall = loadDashboardComponent;
+    MainApplication.cachedState.pageStateCall = loadViewNote;
   }
 };
 
@@ -10,7 +11,7 @@ var AppRequest;
 
 var customWorkflowEngine;
 
-MainApplication.DashboardComponent.ApplicationDetails = function () {
+MainApplication.ViewNote.ApplicationDetails = function () {
   this.url = window.location.href;
   this.itemId = null;
   this.mode = null;
@@ -33,17 +34,17 @@ MainApplication.DashboardComponent.ApplicationDetails = function () {
   this.nonConformanceCounter = 1;
 };
 
-whenDashboardDependeciesLoaded = function () {
-  console.log("Dashboard component loaded");
+viewNote = function () {
+  console.log("ViewNote component loaded");
   $("#newLoader").hide();
-  $("#dashboard-page").removeClass("hidden");
+  $("#viewnote-page").removeClass("hidden");
   globalDefinitions.closeLoader();
 }
-whenDashboardDependeciesLoadedxxxxxxx = function () {
+whenViewNoteDependeciesLoaded = function () {
   // globalDefinitions.callLoader();
   globalDefinitions.extendStages();
   globalDefinitions.sortResponse();
-  AppRequest = new MainApplication.DashboardComponent.ApplicationDetails();
+  AppRequest = new MainApplication.ViewNote.ApplicationDetails();
   AppRequest.pendingItems = [];
   AppRequest.myItems = [];
   // MainApplication.getNCOnQueue();
@@ -146,13 +147,13 @@ whenDashboardDependeciesLoadedxxxxxxx = function () {
     switch (tab) {
 
         case "myAudits":
-            MainApplication.DashboardComponent.currentTab = "MyAudits";
-            MainApplication.DashboardComponent.showTableData(AppRequest.myItems);
+            MainApplication.ViewNote.currentTab = "MyAudits";
+            MainApplication.ViewNote.showTableData(AppRequest.myItems);
             break;
 
         case "pending":
-            MainApplication.DashboardComponent.currentTab = "Pending";
-            MainApplication.DashboardComponent.showTableData(AppRequest.pendingItems);
+            MainApplication.ViewNote.currentTab = "Pending";
+            MainApplication.ViewNote.showTableData(AppRequest.pendingItems);
             break;
     }
 
@@ -160,11 +161,11 @@ whenDashboardDependeciesLoadedxxxxxxx = function () {
 
   // Fetch data for both tabs
 
-  MainApplication.DashboardComponent.pendingRequests();
+  MainApplication.ViewNote.pendingRequests();
 
-  MainApplication.DashboardComponent.myRequests();
+  MainApplication.ViewNote.myRequests();
 
-  MainApplication.DashboardComponent.currentTab = "Pending";
+  MainApplication.ViewNote.currentTab = "Pending";
 
   // if (
   //   MainApplication.configuredTaskMembers[
@@ -181,7 +182,7 @@ whenDashboardDependeciesLoadedxxxxxxx = function () {
   }, 2000);
 };
 
-MainApplication.DashboardComponent.pendingRequests = function () {
+MainApplication.ViewNote.pendingRequests = function () {
   var queryCaml = [
     {
       ascending: "FALSE",
@@ -327,14 +328,14 @@ MainApplication.DashboardComponent.pendingRequests = function () {
 
       $("#auditsAwaitingMyAction").text(tableData.length);
 
-      if (MainApplication.DashboardComponent.currentTab === "Pending") {
-        MainApplication.DashboardComponent.showTableData(tableData);
+      if (MainApplication.ViewNote.currentTab === "Pending") {
+        MainApplication.ViewNote.showTableData(tableData);
       }
     },
   );
 };
 
-MainApplication.DashboardComponent.myRequests = function () {
+MainApplication.ViewNote.myRequests = function () {
   var queryToUse = [
     {
       ascending: "FALSE",
@@ -442,14 +443,14 @@ MainApplication.DashboardComponent.myRequests = function () {
       $("#pendingRequest").text(pendingItems.length);
       $("#completedRequest").text(completedItems.length);
 
-      if (MainApplication.DashboardComponent.currentTab === "MyAudits") {
-        MainApplication.DashboardComponent.showTableData(tableData);
+      if (MainApplication.ViewNote.currentTab === "MyAudits") {
+        MainApplication.ViewNote.showTableData(tableData);
       }
     },
   );
 };
 
-MainApplication.DashboardComponent.showTableData = function (tableData) {
+MainApplication.ViewNote.showTableData = function (tableData) {
   if (tableData.length === 0) {
     $("#tasktable").hide();
 

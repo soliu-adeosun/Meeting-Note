@@ -1,9 +1,9 @@
-loadNewRequestComponent = function () {
+loadNewNoteComponent = function () {
   if (MainApplication.cachedState.mode) {
-    whenNewRequestDependeciesLoaded();
+    whenNewNoteDependeciesLoaded();
   } else {
     setTimeout(function () {
-      MainApplication.cachedState.pageStateCall = loadNewRequestComponent;
+      MainApplication.cachedState.pageStateCall = loadNewNoteComponent;
     }, 1000);
   }
 };
@@ -11,7 +11,8 @@ loadNewRequestComponent = function () {
 var AppRequest;
 var customWorkflowEngine;
 
-MainApplication.NewRequestComponent.ApplicationDetails = function () {
+
+MainApplication.NewNoteComponent.ApplicationDetails = function () {
   this.url = window.location.href;
   this.itemId = null;
   this.mode = null;
@@ -46,17 +47,17 @@ MainApplication.NewRequestComponent.ApplicationDetails = function () {
   this.actionItems = [];
 };
 
-function whenNewRequestDependeciesLoaded() {
+function whenNewNoteDependeciesLoaded() {
   // globalDefinitions.callLoader();
   $spcontext.assignAttributes();
-  MainApplication.CurrentPageSubmitFunction = MainApplication.NewRequestComponent.confirmSubmit;
-  AppRequest = new MainApplication.NewRequestComponent.ApplicationDetails();
+  MainApplication.CurrentPageSubmitFunction = MainApplication.NewNoteComponent.confirmSubmit;
+  AppRequest = new MainApplication.NewNoteComponent.ApplicationDetails();
   globalDefinitions.extendStages();
 
   MainApplication.renderMeetingCategory();
   MainApplication.DateConstraints.applyToAllDateInputs();
-  MainApplication.NewRequestComponent.bindMeetingDate();
-  MainApplication.NewRequestComponent.prepareAllTables();
+  MainApplication.NewNoteComponent.bindMeetingDate();
+  MainApplication.NewNoteComponent.prepareAllTables();
 
   AppRequest.itemId = $spcontext.getParameterByName(
     "itemid",
@@ -71,7 +72,7 @@ function whenNewRequestDependeciesLoaded() {
   PeoplePicker.defaultValues = {};
   PeoplePicker.initializePeoplePickers(MainApplication.staffList);
 
-  MainApplication.NewRequestComponent.editingActionIndex = null;
+  MainApplication.NewNoteComponent.editingActionIndex = null;
 
   $(document).on("change", "#start-time", function () {
     const startTime = $(this).val();
@@ -86,7 +87,7 @@ function whenNewRequestDependeciesLoaded() {
   });
   // Handle switching between Division and Person
 $(document).on("change", "#action-type", function () {
-  MainApplication.NewRequestComponent.bindActionAssignee($(this).val());
+  MainApplication.NewNoteComponent.bindActionAssignee($(this).val());
 });
 
 // Add the current action item to the output table
@@ -100,7 +101,7 @@ $(document).on("click", "#add-task-btn", function () {
   const dueDate = $("#action-due-date").val();
   const actionPlan = $("#action-plan").val().trim();
 
-  const component = MainApplication.NewRequestComponent;
+  const component = MainApplication.NewNoteComponent;
   const editingIndex = component.editingActionIndex;
 
   if (!type) {
@@ -146,7 +147,7 @@ $(document).on("click", "#add-task-btn", function () {
 });
 
 $(document).on("click", ".edit-action-btn", function () {
-  const component = MainApplication.NewRequestComponent;
+  const component = MainApplication.NewNoteComponent;
   const index = Number($(this).attr("data-index"));
   const item = AppRequest.actionItems[index];
 
@@ -186,7 +187,7 @@ $(document).on("click", ".edit-action-btn", function () {
 
 // Delete an action item
 $(document).on("click", ".delete-action-btn", function () {
-  const component = MainApplication.NewRequestComponent;
+  const component = MainApplication.NewNoteComponent;
   const index = Number($(this).attr("data-index"));
 
   if (index < 0 || index >= AppRequest.actionItems.length) return;
@@ -209,7 +210,7 @@ $(document).on("click", ".delete-action-btn", function () {
 
 // Cancel editing
 $(document).on("click", "#cancel-action-edit", function () {
-  MainApplication.NewRequestComponent.resetActionForm();
+  MainApplication.NewNoteComponent.resetActionForm();
 });
 
 
@@ -217,7 +218,7 @@ $(document).on("click", "#cancel-action-edit", function () {
 
   setTimeout(function () {
     if (AppRequest.itemId !== null && AppRequest.itemId !== "") {
-        MainApplication.NewRequestComponent.recoverListData();
+        MainApplication.NewNoteComponent.recoverListData();
     }
     $("#newLoader").hide();
     $("#newrequest-page").removeClass("hidden");
@@ -231,7 +232,7 @@ $(document).on("click", "#cancel-action-edit", function () {
 // format string you pass it - this reorders that into yyyy-mm-dd so it
 // survives being dropped into an <input type="date">. Handles both "-"
 // and "/" separators and 2- or 4-digit years.
-MainApplication.NewRequestComponent.toISODateInput = function (rawValue) {
+MainApplication.NewNoteComponent.toISODateInput = function (rawValue) {
     if (!rawValue) {
         return "";
     }
@@ -252,7 +253,7 @@ MainApplication.NewRequestComponent.toISODateInput = function (rawValue) {
     return `${year}-${month}-${day}`;
 };
 
-MainApplication.NewRequestComponent.hydrateDynamicTables = function (savedData) {
+MainApplication.NewNoteComponent.hydrateDynamicTables = function (savedData) {
   Object.keys(savedData).forEach(function (tableName) {
     var ctx = AppRequest.tableCtxRegistry[tableName];
     var root = AppRequest.tableRootRegistry[tableName];
@@ -292,13 +293,13 @@ MainApplication.NewRequestComponent.hydrateDynamicTables = function (savedData) 
 };
 
 // Form submission processes
-MainApplication.NewRequestComponent.confirmSubmit = function (action) {
+MainApplication.NewNoteComponent.confirmSubmit = function (action) {
   if (action === "Draft") {
-      MainApplication.confirmAction = MainApplication.NewRequestComponent.saveConfirmed;
+      MainApplication.confirmAction = MainApplication.NewNoteComponent.saveConfirmed;
       $("#confirmModal").modal("show");
       console.log(action);
   } else {
-      MainApplication.confirmAction = MainApplication.NewRequestComponent.actionConfirmed;
+      MainApplication.confirmAction = MainApplication.NewNoteComponent.actionConfirmed;
       $("#confirmModal").modal("show");
       console.log(action);
   }
@@ -306,14 +307,56 @@ MainApplication.NewRequestComponent.confirmSubmit = function (action) {
   AppRequest.actionTaken = action;
 }
 
-MainApplication.NewRequestComponent.actionConfirmed = function () {
-  MainApplication.NewRequestComponent.saveDataToList();
+MainApplication.NewNoteComponent.actionConfirmed = function () {
+  MainApplication.NewNoteComponent.saveDataToList();
 };
 
-MainApplication.NewRequestComponent.saveConfirmed = function () {
-    MainApplication.NewRequestComponent.saveDataToListAsDraft();
+MainApplication.NewNoteComponent.saveConfirmed = function () {
+    MainApplication.NewNoteComponent.saveDataToListAsDraft();
 }
-MainApplication.NewRequestComponent.saveDataToList = function () {
+
+/**
+ * Build SharePoint person field value(s) from email(s).
+ * - single: returns SP.FieldUserValue or null
+ * - multiple: returns SP.FieldUserValue[] (empty array if none)
+ */
+MainApplication.NewNoteComponent.toPersonField = function (emails, multiple) {
+  multiple = !!multiple;
+
+  var list = [];
+  if (emails == null || emails === "") {
+    return multiple ? [] : null;
+  }
+  if (Array.isArray(emails)) {
+    list = emails;
+  } else {
+    list = [emails];
+  }
+
+  var values = [];
+  list.forEach(function (email) {
+    if (!email) return;
+    // Already a FieldUserValue-like object
+    if (typeof email === "object" && email !== null) {
+      values.push(email);
+      return;
+    }
+    var str = String(email).trim();
+    if (!str) return;
+    try {
+      values.push(SP.FieldUserValue.fromUser(str));
+    } catch (e) {
+      console.warn("Unable to create FieldUserValue for:", str, e);
+    }
+  });
+
+  if (multiple) {
+    return values;
+  }
+  return values.length ? values[0] : null;
+};
+
+MainApplication.NewNoteComponent.saveDataToList = function () {
   globalDefinitions.onActionClicked();
 
   var formData = $spcontext.bind({});
@@ -324,29 +367,43 @@ MainApplication.NewRequestComponent.saveDataToList = function () {
   if ($spcontext.checkPassedValidation()) {
 
     try {
-      // var timekeeper = pickerValues?.TimeKeeper;
+      // Person columns need SP.FieldUserValue, not email JSON strings.
+      // Prefer getConfiguredValue() (plain emails) then convert.
+      var configured = people || {};
+      var toPerson = MainApplication.NewNoteComponent.toPersonField;
 
-      // formData.TimeKeeper =
-      //     timekeeper && timekeeper.$GI_1
-      //         ? timekeeper
-      //         : null;
-      formData.TimeKeeper = pickerValues?.TimeKeeper;
-      formData.Attendees = pickerValues?.Attendees;
-      formData.TimeOff = pickerValues?.TimeOff;
-      formData.Presenter = pickerValues?.Presenter;
-      formData.EngagementParticipant = pickerValues?.EngagementParticipant;
-      
-      formData.Absentees = JSON.stringify(formData.Absentees);
-      formData.Agenda = JSON.stringify(formData.Agenda);
-      formData.Discussion = JSON.stringify(formData.Discussion);
-      formData.Tasks = JSON.stringify(AppRequest.actionItems);
-      formData.NumberOfTaskItems = AppRequest.actionItems.length;
+      formData.TimeKeeper = toPerson(
+        configured.TimeKeeper || pickerValues?.TimeKeeper,
+        false
+      );
+      formData.Attendees = toPerson(
+        configured.Attendees || pickerValues?.Attendees,
+        true
+      );
+      formData.TimeOff = toPerson(
+        configured.TimeOff || pickerValues?.TimeOff,
+        true
+      );
+      formData.Presenter = toPerson(
+        configured.Presenter || pickerValues?.Presenter,
+        true
+      );
+      formData.EngagementParticipant = toPerson(
+        configured.EngagementParticipant || pickerValues?.EngagementParticipant,
+        true
+      );
+
+      formData.Absentees = JSON.stringify(formData.Absentees || []);
+      formData.Agenda = JSON.stringify(formData.Agenda || []);
+      formData.Discussion = JSON.stringify(formData.Discussion || []);
+      formData.Tasks = JSON.stringify(AppRequest.actionItems || []);
+      formData.NumberOfTaskItems = (AppRequest.actionItems || []).length;
 
       formData.StartTime = $("#start-time").val();
       formData.EndTime = $("#end-time").val();
-      
-   
-    } catch (error){};
+    } catch (error) {
+      console.error("saveDataToList field prep failed:", error);
+    };
     
     formData.Reporter = CurrentUserProperties.title;
     formData.Status = "Submitted";
@@ -354,7 +411,7 @@ MainApplication.NewRequestComponent.saveDataToList = function () {
 
 
     globalDefinitions.onActionCompleted();
-    MainApplication.NewRequestComponent.proceedToList(formData, false);
+    MainApplication.NewNoteComponent.proceedToList(formData, false);
     // console.log("Form Data to be submitted:", formData);
   } else {
     globalDefinitions.HandlerError("", true);
@@ -362,7 +419,7 @@ MainApplication.NewRequestComponent.saveDataToList = function () {
   }
 };
 
-MainApplication.NewRequestComponent.saveDataToListAsDraft = function () {
+MainApplication.NewNoteComponent.saveDataToListAsDraft = function () {
   globalDefinitions.onActionClicked();
   var formData = $spcontext.bind({}, "ProcessOverview") || {};
   if ($spcontext.checkPassedValidation()) {
@@ -370,23 +427,40 @@ MainApplication.NewRequestComponent.saveDataToListAsDraft = function () {
     var pickerValues = PeoplePicker.getValue() || {};
     var people = PeoplePicker.getConfiguredValue() || {};
      try {
-      formData.TimeKeeper = pickerValues?.TimeKeeper;
-      formData.Attendees = pickerValues?.Attendees;
-      formData.TimeOff = pickerValues?.TimeOff;
-      formData.Presenter = pickerValues?.Presenter;
-      formData.EngagementParticipant = pickerValues?.EngagementParticipant;
-      
-      formData.Absentees = JSON.stringify(formData.Absentees);
-      formData.Agenda = JSON.stringify(formData.Agenda);
-      formData.Discussion = JSON.stringify(formData.Discussion);
-      formData.Tasks = JSON.stringify(AppRequest.actionItems);
-      formData.NumberOfTaskItems = AppRequest.actionItems.length;
+      var toPerson = MainApplication.NewNoteComponent.toPersonField;
+
+      formData.TimeKeeper = toPerson(
+        people.TimeKeeper || pickerValues.TimeKeeper,
+        false
+      );
+      formData.Attendees = toPerson(
+        people.Attendees || pickerValues.Attendees,
+        true
+      );
+      formData.TimeOff = toPerson(
+        people.TimeOff || pickerValues.TimeOff,
+        true
+      );
+      formData.Presenter = toPerson(
+        people.Presenter || pickerValues.Presenter,
+        true
+      );
+      formData.EngagementParticipant = toPerson(
+        people.EngagementParticipant || pickerValues.EngagementParticipant,
+        true
+      );
+
+      formData.Absentees = JSON.stringify(formData.Absentees || []);
+      formData.Agenda = JSON.stringify(formData.Agenda || []);
+      formData.Discussion = JSON.stringify(formData.Discussion || []);
+      formData.Tasks = JSON.stringify(AppRequest.actionItems || []);
+      formData.NumberOfTaskItems = (AppRequest.actionItems || []).length;
 
       formData.StartTime = $("#start-time").val();
       formData.EndTime = $("#end-time").val();
-      
-   
-    } catch (error){};
+    } catch (error) {
+      console.error("saveDataToListAsDraft field prep failed:", error);
+    };
     
     formData.Reporter = CurrentUserProperties.title;
     formData.Title = formData.MeetingType + " - Week " + formData.MeetingWeek;
@@ -394,7 +468,7 @@ MainApplication.NewRequestComponent.saveDataToListAsDraft = function () {
     globalDefinitions.callLoader();
 
     console.log("Data at SaveAsDraft: ", formData);
-    MainApplication.NewRequestComponent.proceedToList(formData, false);
+    MainApplication.NewNoteComponent.proceedToList(formData, false);
 } else {
     globalDefinitions.HandlerError("Please fill the Process Overview part at least");
     globalDefinitions.onActionFailed();
@@ -402,8 +476,8 @@ MainApplication.NewRequestComponent.saveDataToListAsDraft = function () {
   // console.log("Form Data to be submitted:", formData);
 }
 
-MainApplication.NewRequestComponent.proceedToList = function (formData) {
-  const component = MainApplication.NewRequestComponent;
+MainApplication.NewNoteComponent.proceedToList = function (formData) {
+  const component = MainApplication.NewNoteComponent;
   const isSubmit = AppRequest.actionTaken === "submit";
 
   // Handle completion after the parent and any required tasks are saved
@@ -477,7 +551,7 @@ MainApplication.NewRequestComponent.proceedToList = function (formData) {
   }
 };
 
-MainApplication.NewRequestComponent.prepareAllTables = function () {
+MainApplication.NewNoteComponent.prepareAllTables = function () {
   MainApplication.initializeDynamicTable({
     ctx: AppRequest.absenteeCTX,
 
@@ -526,7 +600,7 @@ MainApplication.NewRequestComponent.prepareAllTables = function () {
   });
 }
 
-MainApplication.NewRequestComponent.getWeekNumber = function (date) {
+MainApplication.NewNoteComponent.getWeekNumber = function (date) {
   // Clone the date so we don't modify the original
   const d = new Date(
     Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
@@ -542,7 +616,7 @@ MainApplication.NewRequestComponent.getWeekNumber = function (date) {
   return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
 };
 
-MainApplication.NewRequestComponent.bindMeetingDate = function () {
+MainApplication.NewNoteComponent.bindMeetingDate = function () {
   const $dateInput = $('[speed-bind-validate="MeetingDate"]');
   const $week = $(".meeting-date-label .week");
   const $weekNumber = $("#week-number");
@@ -560,7 +634,7 @@ MainApplication.NewRequestComponent.bindMeetingDate = function () {
     const [year, month, day] = selectedDate.split("-").map(Number);
     const date = new Date(year, month - 1, day);
 
-    const weekNumber = MainApplication.NewRequestComponent.getWeekNumber(date);
+    const weekNumber = MainApplication.NewNoteComponent.getWeekNumber(date);
 
     $weekNumber.text(weekNumber);
     $week.removeClass("hide-week");
@@ -568,7 +642,7 @@ MainApplication.NewRequestComponent.bindMeetingDate = function () {
 };
 
 // Escape values before inserting them into HTML
-MainApplication.NewRequestComponent.escapeHtml = function (value) {
+MainApplication.NewNoteComponent.escapeHtml = function (value) {
   return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
     return {
       "&": "&amp;",
@@ -581,7 +655,7 @@ MainApplication.NewRequestComponent.escapeHtml = function (value) {
 };
 
 // Populate the assignee dropdown based on the selected type
-MainApplication.NewRequestComponent.bindActionAssignee = function (type) {
+MainApplication.NewNoteComponent.bindActionAssignee = function (type) {
   const $container = $("#action-assignee-container");
   $container.empty();
 
@@ -596,7 +670,7 @@ MainApplication.NewRequestComponent.bindActionAssignee = function (type) {
         : division.Title || "";
 
       if (name) {
-        options += `<option value="${MainApplication.NewRequestComponent.escapeHtml(name)}">${MainApplication.NewRequestComponent.escapeHtml(name)}</option>`;
+        options += `<option value="${MainApplication.NewNoteComponent.escapeHtml(name)}">${MainApplication.NewNoteComponent.escapeHtml(name)}</option>`;
       }
     });
   }
@@ -607,7 +681,7 @@ MainApplication.NewRequestComponent.bindActionAssignee = function (type) {
       const email = staff.Email || "";
 
       if (name && email) {
-        options += `<option value="${MainApplication.NewRequestComponent.escapeHtml(email)}" data-name="${MainApplication.NewRequestComponent.escapeHtml(name)}" data-email="${MainApplication.NewRequestComponent.escapeHtml(email)}">${MainApplication.NewRequestComponent.escapeHtml(name)}</option>`;
+        options += `<option value="${MainApplication.NewNoteComponent.escapeHtml(email)}" data-name="${MainApplication.NewNoteComponent.escapeHtml(name)}" data-email="${MainApplication.NewNoteComponent.escapeHtml(email)}">${MainApplication.NewNoteComponent.escapeHtml(name)}</option>`;
       }
     });
   }
@@ -622,9 +696,9 @@ MainApplication.NewRequestComponent.bindActionAssignee = function (type) {
 // Render the collected action items into the output table
 
 
-MainApplication.NewRequestComponent.renderActionItems = function () {
+MainApplication.NewNoteComponent.renderActionItems = function () {
   const $container = $(".actions-blank");
-  const component = MainApplication.NewRequestComponent;
+  const component = MainApplication.NewNoteComponent;
 
   if (!AppRequest.actionItems || !AppRequest.actionItems.length) {
     $container.empty();
@@ -679,8 +753,8 @@ MainApplication.NewRequestComponent.renderActionItems = function () {
   `);
 };
 
-MainApplication.NewRequestComponent.resetActionForm = function () {
-  const component = MainApplication.NewRequestComponent;
+MainApplication.NewNoteComponent.resetActionForm = function () {
+  const component = MainApplication.NewNoteComponent;
 
   component.editingActionIndex = null;
 
@@ -695,7 +769,7 @@ MainApplication.NewRequestComponent.resetActionForm = function () {
   $("#cancel-action-edit").remove();
 };
 
-MainApplication.NewRequestComponent.createMeetingTasks = function (
+MainApplication.NewNoteComponent.createMeetingTasks = function (
   referenceID,
   callback
 ) {
@@ -731,7 +805,7 @@ MainApplication.NewRequestComponent.createMeetingTasks = function (
   );
 };
 
-MainApplication.NewRequestComponent.recoverListData = function () {
+MainApplication.NewNoteComponent.recoverListData = function () {
   if (AppRequest.itemId !== null && AppRequest.itemId !== "") {
 
     var query = speedctxRoot.camlBuilder([
@@ -807,22 +881,22 @@ MainApplication.NewRequestComponent.recoverListData = function () {
          */
 
         listProperties.Absentees =
-          MainApplication.NewRequestComponent.parseSavedJSON(
+          MainApplication.NewNoteComponent.parseSavedJSON(
             listProperties.Absentees
           );
 
         listProperties.Agenda =
-          MainApplication.NewRequestComponent.parseSavedJSON(
+          MainApplication.NewNoteComponent.parseSavedJSON(
             listProperties.Agenda
           );
 
         listProperties.Discussion =
-          MainApplication.NewRequestComponent.parseSavedJSON(
+          MainApplication.NewNoteComponent.parseSavedJSON(
             listProperties.Discussion
           );
 
         listProperties.Tasks =
-          MainApplication.NewRequestComponent.parseSavedJSON(
+          MainApplication.NewNoteComponent.parseSavedJSON(
             listProperties.Tasks
           );
 
@@ -842,7 +916,7 @@ MainApplication.NewRequestComponent.recoverListData = function () {
           });
 
           listProperties.MeetingDate =
-            MainApplication.NewRequestComponent.toISODateInput(
+            MainApplication.NewNoteComponent.toISODateInput(
               meetingDate
             );
         }
@@ -862,65 +936,41 @@ MainApplication.NewRequestComponent.recoverListData = function () {
 
         /*
          * ---------------------------------------------------------
-         * 4. Bind normal fields
-         *
-         * This handles:
-         * MeetingDate
-         * MeetingWeek
-         * MeetingCategory
-         * AOB
-         * etc.
+         * 4. Bind normal scalar fields (MeetingDate, AOB, etc.)
+         *    MeetingCategory / MeetingType are restored separately
+         *    because the category control is rebuilt dynamically.
          * ---------------------------------------------------------
          */
 
         $spcontext.htmlBind(listProperties);
 
-        /*
-         * ---------------------------------------------------------
-         * 14. Restore dynamic tables
-         *
-         * Absentees
-         * Agenda
-         * Discussion
-         * ---------------------------------------------------------
-         */
-
-        MainApplication.NewRequestComponent.hydrateMeetingTables({
-          Absentees: listProperties.Absentees,
-          Agenda: listProperties.Agenda,
-          Discussion: listProperties.Discussion,
-        });
-
 
         /*
          * ---------------------------------------------------------
-         * 5. Meeting Category
+         * 5. Meeting Category + Meeting Type
          *
-         * renderMeetingCategory() creates the Meeting Type
-         * control dynamically based on the selected category.
+         * renderMeetingCategory() empties #meeting-category and
+         * rebuilds its options, then wires a change handler that
+         * creates the Meeting Type control. Order matters:
+         *   1) rebuild options
+         *   2) set saved category + trigger change (creates type UI)
+         *   3) set saved meeting type on the new control
          * ---------------------------------------------------------
          */
 
         var savedCategory = listProperties.MeetingCategory || "";
         var savedMeetingType = listProperties.MeetingType || "";
 
-        $("#meeting-category").val(savedCategory);
-
         MainApplication.renderMeetingCategory();
 
-
-        /*
-         * renderMeetingCategory() has now created the correct
-         * Meeting Type control.
-         *
-         * Find it and restore the saved value.
-         */
+        if (savedCategory) {
+          $("#meeting-category").val(savedCategory).trigger("change");
+        }
 
         if (savedMeetingType) {
-
+          // The change handler builds either a <select> or <input>
           var $meetingType = $(
-            "#meeting-type-container select, " +
-            "#meeting-type-container input"
+            "#meeting-type-container select, #meeting-type-container input"
           ).first();
 
           if ($meetingType.length) {
@@ -931,7 +981,7 @@ MainApplication.NewRequestComponent.recoverListData = function () {
 
         /*
          * ---------------------------------------------------------
-         * 6. Meeting duration
+         * 6. Meeting duration label
          * ---------------------------------------------------------
          */
 
@@ -939,27 +989,23 @@ MainApplication.NewRequestComponent.recoverListData = function () {
           MainApplication.meetingCategory &&
           MainApplication.meetingCategory.find(function (item) {
             return (
-              item.Title === savedCategory ||
-              item.title === savedCategory
+              (item.Title || item.title || "") === savedCategory
             );
           });
 
         if (selectedMeetingCategory) {
-
-          $("#duration")
-            .text(
-              selectedMeetingCategory.Duration ||
+          $("#duration").text(
+            selectedMeetingCategory.Duration ||
               selectedMeetingCategory.duration ||
               "0"
-            );
-
+          );
           $("#duration-container").removeClass("hide-week");
         }
 
 
         /*
          * ---------------------------------------------------------
-         * 7. Meeting date / week
+         * 7. Meeting date / week display
          * ---------------------------------------------------------
          */
 
@@ -967,24 +1013,20 @@ MainApplication.NewRequestComponent.recoverListData = function () {
           $("#week-number").text(listProperties.MeetingWeek);
           $(".meeting-date-label .week").removeClass("hide-week");
         } else if (listProperties.MeetingDate) {
-
-          var dateParts = listProperties.MeetingDate
+          var dateParts = String(listProperties.MeetingDate)
             .split("-")
             .map(Number);
 
           if (dateParts.length === 3) {
-
             var recoveredDate = new Date(
               dateParts[0],
               dateParts[1] - 1,
               dateParts[2]
             );
-
             var weekNumber =
-              MainApplication.NewRequestComponent.getWeekNumber(
+              MainApplication.NewNoteComponent.getWeekNumber(
                 recoveredDate
               );
-
             $("#week-number").text(weekNumber);
             $(".meeting-date-label .week").removeClass("hide-week");
           }
@@ -1007,139 +1049,98 @@ MainApplication.NewRequestComponent.recoverListData = function () {
 
         /*
          * ---------------------------------------------------------
-         * 9. Multiple PeoplePickers
+         * 9. Restore dynamic tables (Absentees / Agenda / Discussion)
+         * ---------------------------------------------------------
+         */
+
+        MainApplication.NewNoteComponent.hydrateMeetingTables({
+          Absentees: listProperties.Absentees,
+          Agenda: listProperties.Agenda,
+          Discussion: listProperties.Discussion,
+        });
+
+
+        /*
+         * ---------------------------------------------------------
+         * 10–13. PeoplePickers
          *
-         * Same approach as Auditees / OtherAuditors:
+         * Saved values may be plain emails, JSON strings, arrays of
+         * emails, or objects with an email property (depending on
+         * control-value-type and how SharePoint stored them).
          *
-         * [
-         *   { email: "user1@company.com" },
-         *   { email: "user2@company.com" }
-         * ]
-         *
-         * becomes:
-         *
-         * [
-         *   "user1@company.com",
-         *   "user2@company.com"
-         * ]
+         * PeoplePicker.setDefault only seeds defaultValues — the
+         * values are applied when initializePeoplePickers runs.
+         * So: normalize → setDefault → re-initialize.
          * ---------------------------------------------------------
          */
 
         var attendeesEmails =
-          Array.isArray(listProperties.Attendees)
-            ? [
-                ...new Set(
-                  listProperties.Attendees
-                    .map(function (person) {
-                      return person && person.email;
-                    })
-                    .filter(Boolean)
-                ),
-              ]
-            : [];
-
+          MainApplication.NewNoteComponent.normalizePeopleEmails(
+            listProperties.Attendees
+          );
         var timeOffEmails =
-          Array.isArray(listProperties.TimeOff)
-            ? [
-                ...new Set(
-                  listProperties.TimeOff
-                    .map(function (person) {
-                      return person && person.email;
-                    })
-                    .filter(Boolean)
-                ),
-              ]
-            : [];
-
+          MainApplication.NewNoteComponent.normalizePeopleEmails(
+            listProperties.TimeOff
+          );
         var presenterEmails =
-          Array.isArray(listProperties.Presenter)
-            ? [
-                ...new Set(
-                  listProperties.Presenter
-                    .map(function (person) {
-                      return person && person.email;
-                    })
-                    .filter(Boolean)
-                ),
-              ]
-            : [];
-
+          MainApplication.NewNoteComponent.normalizePeopleEmails(
+            listProperties.Presenter
+          );
         var engagementParticipantEmails =
-          Array.isArray(listProperties.EngagementParticipant)
-            ? [
-                ...new Set(
-                  listProperties.EngagementParticipant
-                    .map(function (person) {
-                      return person && person.email;
-                    })
-                    .filter(Boolean)
-                ),
-              ]
-            : [];
-
-
-        /*
-         * ---------------------------------------------------------
-         * 10. Single PeoplePickers
-         * ---------------------------------------------------------
-         */
-
+          MainApplication.NewNoteComponent.normalizePeopleEmails(
+            listProperties.EngagementParticipant
+          );
+        var timeKeeperEmails =
+          MainApplication.NewNoteComponent.normalizePeopleEmails(
+            listProperties.TimeKeeper
+          );
+        // single-select: pass a string, not an array
         var timeKeeperEmail =
-          listProperties.TimeKeeper &&
-          (
-            listProperties.TimeKeeper.email ||
-            listProperties.TimeKeeper.value
-          ) || "";
+          timeKeeperEmails.length ? timeKeeperEmails[0] : "";
 
+        PeoplePicker.defaultValues = {};
 
-        /*
-         * ---------------------------------------------------------
-         * 11. Initialize PeoplePickers first
-         * ---------------------------------------------------------
-         */
+        if (attendeesEmails.length) {
+          PeoplePicker.setDefault("Attendees", attendeesEmails);
+        }
+        if (timeOffEmails.length) {
+          PeoplePicker.setDefault("TimeOff", timeOffEmails);
+        }
+        if (presenterEmails.length) {
+          PeoplePicker.setDefault("Presenter", presenterEmails);
+        }
+        if (engagementParticipantEmails.length) {
+          PeoplePicker.setDefault(
+            "EngagementParticipant",
+            engagementParticipantEmails
+          );
+        }
+        if (timeKeeperEmail) {
+          PeoplePicker.setDefault("TimeKeeper", timeKeeperEmail);
+        }
 
-        PeoplePicker.initializePeoplePickers(
-          MainApplication.staffList
-        );
+        PeoplePicker.initializePeoplePickers(MainApplication.staffList);
 
-
-        /*
-         * ---------------------------------------------------------
-         * 12. Restore multiple PeoplePickers
-         * ---------------------------------------------------------
-         */
-
-        PeoplePicker.setDefault(
-          "Attendees",
-          attendeesEmails
-        );
-
-        PeoplePicker.setDefault(
-          "TimeOff",
-          timeOffEmails
-        );
-
-        PeoplePicker.setDefault(
-          "Presenter",
-          presenterEmails
-        );
-
-        PeoplePicker.setDefault(
+        // Belt-and-suspenders: force Select2 values in case defaults
+        // were missed (e.g. option list still loading).
+        function applyPickerVal(pickerId, emails, multiple) {
+          var $p = $('[custom-people="' + pickerId + '"]');
+          if (!$p.length) return;
+          if (multiple) {
+            $p.val(emails || []).trigger("change");
+          } else {
+            $p.val(emails || null).trigger("change");
+          }
+        }
+        applyPickerVal("Attendees", attendeesEmails, true);
+        applyPickerVal("TimeOff", timeOffEmails, true);
+        applyPickerVal("Presenter", presenterEmails, true);
+        applyPickerVal(
           "EngagementParticipant",
-          engagementParticipantEmails
+          engagementParticipantEmails,
+          true
         );
-
-
-        /*
-         * ---------------------------------------------------------
-         * 13. Restore single PeoplePickers
-         * ---------------------------------------------------------
-         */
-
-        PeoplePicker.setDefault(
-          "TimeKeeper",
-          timeKeeperEmail
-        );
+        applyPickerVal("TimeKeeper", timeKeeperEmail || null, false);
 
 
         /*
@@ -1152,9 +1153,9 @@ MainApplication.NewRequestComponent.recoverListData = function () {
           ? listProperties.Tasks
           : [];
 
-        MainApplication.NewRequestComponent.editingActionIndex = null;
+        MainApplication.NewNoteComponent.editingActionIndex = null;
 
-        MainApplication.NewRequestComponent.renderActionItems();
+        MainApplication.NewNoteComponent.renderActionItems();
 
 
         /*
@@ -1193,7 +1194,7 @@ MainApplication.NewRequestComponent.recoverListData = function () {
   }
 };
 
-MainApplication.NewRequestComponent.parseSavedJSON = function (value) {
+MainApplication.NewNoteComponent.parseSavedJSON = function (value) {
   if (!value) {
     return [];
   }
@@ -1218,250 +1219,116 @@ MainApplication.NewRequestComponent.parseSavedJSON = function (value) {
   return [];
 };
 
-MainApplication.NewRequestComponent.hydrateMeetingTables = function (savedData) {
+MainApplication.NewNoteComponent.normalizePeopleEmails = function (value) {
   /*
-   * ---------------------------------------------------------
-   * ABSENTEES
-   * ---------------------------------------------------------
+   * Accepts any shape people data may have been stored in:
+   *   - "user@x.com"
+   *   - ["user@x.com", ...]
+   *   - [{ email|Email|value|Key }, ...]
+   *   - JSON strings of the above
+   *   - SP.FieldUserValue-like objects
+   * Returns a de-duplicated array of lowercase emails (or a single string
+   * for single-value pickers when only one value is present is still an array;
+   * callers decide).
    */
+  if (value == null || value === "") return [];
 
-  var absenteeRows = Array.isArray(savedData.Absentees)
-    ? savedData.Absentees
-    : [];
-
-  if (absenteeRows.length > 0) {
-
-    var absenteeCtx = AppRequest.absenteeCTX;
-    var absenteeRoot = "absentees-container";
-
-    var absenteeSettings =
-      absenteeCtx &&
-      absenteeCtx.dynamicTableSettings &&
-      absenteeCtx.dynamicTableSettings.Absentees;
-
-    if (absenteeSettings) {
-
-      /*
-       * Remove the blank row created by prepareAllTables()
-       */
-
-      while ($("#" + absenteeRoot).children("tr").length > 0) {
-        MainApplication.deleteTableRow(
-          absenteeCtx,
-          0,
-          "Absentees"
+  if (typeof value === "string") {
+    var trimmed = value.trim();
+    if (!trimmed) return [];
+    // Try JSON first
+    if (trimmed.charAt(0) === "[" || trimmed.charAt(0) === "{") {
+      try {
+        return MainApplication.NewNoteComponent.normalizePeopleEmails(
+          JSON.parse(trimmed)
         );
+      } catch (e) {
+        // plain email string
+        return [trimmed];
       }
-
-
-      /*
-       * Recreate every saved absentee row
-       */
-
-      absenteeRows.forEach(function (rowData) {
-
-        absenteeSettings.addRow();
-
-        var $row = $("#" + absenteeRoot)
-          .children("tr")
-          .last();
-
-        /*
-         * The first column is the staff selector.
-         */
-
-        var $person = $row
-          .find('[speed-table-include]')
-          .eq(0);
-
-        /*
-         * Populate the selector using staffList.
-         */
-
-        if ($person.length) {
-
-          $person.empty();
-
-          $person.append(
-            '<option value="">Select person</option>'
-          );
-
-          (MainApplication.staffList || []).forEach(
-            function (staff) {
-
-              var name = staff.Title || "";
-              var email = staff.Email || "";
-
-              if (!name || !email) {
-                return;
-              }
-
-              var selected =
-                email.toLowerCase() ===
-                String(rowData.person || "").toLowerCase()
-                  ? "selected"
-                  : "";
-
-              $person.append(
-                $("<option>", {
-                  value: email,
-                  text: name,
-                  selected: selected === "selected",
-                })
-              );
-            }
-          );
-
-          /*
-           * In case the saved value is already the person's
-           * name rather than email, try matching the name too.
-           */
-
-          if (!$person.val() && rowData.person) {
-
-            var matchingStaff =
-              (MainApplication.staffList || []).find(
-                function (staff) {
-
-                  return (
-                    String(staff.Title || "").toLowerCase() ===
-                    String(rowData.person || "").toLowerCase()
-                  );
-                }
-              );
-
-            if (matchingStaff) {
-              $person.val(matchingStaff.Email);
-            }
-          }
-
-          $person.trigger("change");
-        }
-
-
-        /*
-         * Second column = Reason
-         */
-
-        var $reason = $row
-          .find('[speed-table-include]')
-          .eq(1);
-
-        if ($reason.length) {
-          $reason.val(rowData.reason || "");
-        }
-      });
     }
+    return [trimmed];
   }
 
-
-  /*
-   * ---------------------------------------------------------
-   * AGENDA
-   * ---------------------------------------------------------
-   */
-
-  var agendaRows = Array.isArray(savedData.Agenda)
-    ? savedData.Agenda
-    : [];
-
-  if (agendaRows.length > 0) {
-
-    var agendaCtx = AppRequest.agendaCTX;
-    var agendaRoot = "agenda-container";
-
-    var agendaSettings =
-      agendaCtx &&
-      agendaCtx.dynamicTableSettings &&
-      agendaCtx.dynamicTableSettings.Agenda;
-
-    if (agendaSettings) {
-
-      while ($("#" + agendaRoot).children("tr").length > 0) {
-        MainApplication.deleteTableRow(
-          agendaCtx,
-          0,
-          "Agenda"
-        );
-      }
-
-      agendaRows.forEach(function (rowData) {
-
-        agendaSettings.addRow();
-
-        var $row = $("#" + agendaRoot)
-          .children("tr")
-          .last();
-
-        var $agenda = $row
-          .find('[speed-table-include]')
-          .eq(0);
-
-        if ($agenda.length) {
-          $agenda.val(rowData.agenda || "");
-        }
-      });
-    }
+  if (!Array.isArray(value)) {
+    value = [value];
   }
 
+  var emails = [];
+  value.forEach(function (item) {
+    if (item == null || item === "") return;
 
-  /*
-   * ---------------------------------------------------------
-   * DISCUSSION
-   * ---------------------------------------------------------
-   */
+    if (typeof item === "string") {
+      if (item.trim()) emails.push(item.trim());
+      return;
+    }
 
-  var discussionRows = Array.isArray(savedData.Discussion)
-    ? savedData.Discussion
-    : [];
+    if (typeof item === "object") {
+      var email =
+        item.email ||
+        item.Email ||
+        item.value ||
+        item.Key ||
+        item.loginName ||
+        item.LoginName ||
+        "";
 
-  if (discussionRows.length > 0) {
-
-    var discussionCtx = AppRequest.discussionCTX;
-    var discussionRoot = "discussion-container";
-
-    var discussionSettings =
-      discussionCtx &&
-      discussionCtx.dynamicTableSettings &&
-      discussionCtx.dynamicTableSettings.Discussion;
-
-    if (discussionSettings) {
-
-      while (
-        $("#" + discussionRoot).children("tr").length > 0
-      ) {
-        MainApplication.deleteTableRow(
-          discussionCtx,
-          0,
-          "Discussion"
-        );
+      // SP.FieldUserValue sometimes exposes get_email / get_lookupValue
+      if (!email && typeof item.get_email === "function") {
+        try { email = item.get_email(); } catch (e) {}
+      }
+      if (!email && typeof item.get_lookupValue === "function") {
+        try { email = item.get_lookupValue(); } catch (e) {}
+      }
+      // fromUser stores the account in $1_1 / $5_1 depending on build – fall back to toString
+      if (!email && typeof item.toString === "function") {
+        var asStr = String(item);
+        if (asStr.indexOf("@") > -1) email = asStr;
       }
 
-      discussionRows.forEach(function (rowData) {
-
-        discussionSettings.addRow();
-
-        var $row = $("#" + discussionRoot)
-          .children("tr")
-          .last();
-
-        var $discussion = $row
-          .find('[speed-table-include]')
-          .eq(0);
-
-        if ($discussion.length) {
-          $discussion.val(rowData.discussion || "");
-        }
-      });
+      if (email && String(email).trim()) {
+        emails.push(String(email).trim());
+      }
     }
+  });
+
+  // de-dupe case-insensitively, preserve first casing
+  var seen = {};
+  var unique = [];
+  emails.forEach(function (e) {
+    var key = e.toLowerCase();
+    if (!seen[key]) {
+      seen[key] = true;
+      unique.push(e);
+    }
+  });
+  return unique;
+};
+
+MainApplication.NewNoteComponent.hydrateMeetingTables = function (savedData) {
+  /*
+   * Use Speed's displayRows so bindExtensions (textColumn / textAreaColumn /
+   * selectColumn) receive the full row object and pre-fill values correctly.
+   * Manually addRow() + .val() was failing because the selector targeted an
+   * attribute ([speed-table-include]) instead of the class (.speed-table-include).
+   */
+  function hydrateOne(tableName, rows, ctx) {
+    rows = Array.isArray(rows) ? rows : [];
+    if (!rows.length || !ctx) return;
+
+    var settings =
+      ctx.dynamicTableSettings && ctx.dynamicTableSettings[tableName];
+    if (!settings || typeof settings.displayRows !== "function") return;
+
+    // displayRows replaces tbody contents via manualTable
+    settings.displayRows(rows);
   }
 
-
-  /*
-   * Rebind delete buttons and validation after
-   * dynamically creating the rows.
-   */
+  hydrateOne("Absentees", savedData.Absentees, AppRequest.absenteeCTX);
+  hydrateOne("Agenda", savedData.Agenda, AppRequest.agendaCTX);
+  hydrateOne("Discussion", savedData.Discussion, AppRequest.discussionCTX);
 
   MainApplication.bindDeleteEvents();
   $spcontext.applyValidationEvents();
-};
+}
+;

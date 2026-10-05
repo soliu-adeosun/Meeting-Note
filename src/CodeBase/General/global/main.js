@@ -72,11 +72,12 @@ function MainStartPoint() {
   this.isUserAnActor = false;
   this.isPureHOD = false;
 
-  this.NewRequestComponent = {};
-  this.DashboardComponent = {};
-  this.ApproveRequestComponent = {};
-  this.ViewRequestComponent = {};
-  this.ReportComponent = {};
+  this.NewNoteComponent = {};
+  this.MeetingTasksComponent = {};
+  this.PreviousNotesComponent = {};
+  this.MyNotesComponent = {};
+  this.ViewNoteComponent = {};
+  this.ViewTaskComponent = {};
 
   this.CurrentPageSubmitFunction = null;
   this.inspectionItems = [];
@@ -277,8 +278,8 @@ function whenLayoutLoaded() {
           "Staff List",
           [
             {
-              orderby: "ID",
-              ascending: "FALSE",
+              orderby: "Title",
+              ascending: "TRUE",
             },
             {
               operator: "Eq",

@@ -1,23 +1,26 @@
 import * as React from "react";
+import ClientButton from "../../../../Global/ClientButton";
 import { NewLoader } from "../../../../Global/NewLoader";
 // import { NewLoader } from "../../../../Global/NewLoader";
-// import { Link } from "react-router-dom";
+// import CustomPeoplePicker from "../../../../Global/CustomPeoplePicker";
 
-require("viewrequest");
+require("mynotes");
+require("peoplepicker");
 
-export default class NewRequest extends React.Component<{}, {}> {
+export default class MyNotes extends React.Component<{}, {}> {
   public render(): React.ReactElement {
     return (
       <>
         <NewLoader />
-        <section className="hidden" id="viewrequest-page">
+        <section className="hidden" id="mynotes-page">
           <div className="AdrPage">
             <section className="AdrCompactHero">
               <div>
-                <span className="AdrEyebrow">View Request</span>
-                <h3>VIEW PAGE</h3>
+                <span className="AdrEyebrow">Approve Request</span>
+                <h3>APPROVAL PAGE</h3>
               </div>
             </section>
+
             <section className="AdrFormSection">
               <div className="AdrFormGrid">
                 <label className="AdrField">
@@ -190,17 +193,6 @@ export default class NewRequest extends React.Component<{}, {}> {
                     />
                   </label>
 
-                  {/* <label className="AdrField">
-                  <span>
-                    What are the biggest pain points or challenges with the
-                    current process?
-                  </span>
-                  <textarea readOnly
-                    placeholder="Enter text"
-                    speed-bind="PainPoints"
-                  />
-                </label> */}
-
                   <label className="AdrField">
                     <span>What marks the process as complete?</span>
                     <textarea
@@ -285,7 +277,7 @@ export default class NewRequest extends React.Component<{}, {}> {
                   </label>
                 </div>
 
-                <div className="table-wrapper">
+                <div className="table-wrapper" id="approvalStagesContainer">
                   <div className="tableLabel">
                     <span>List all approval stages in order</span>
                     {/* <button
@@ -390,7 +382,7 @@ export default class NewRequest extends React.Component<{}, {}> {
                   </label>
                 </div>
 
-                <div className="table-wrapper">
+                <div className="table-wrapper" id="userAccessContainer">
                   <div className="tableLabel">
                     <span>
                       Who are the different types of users of this system?
@@ -539,11 +531,60 @@ export default class NewRequest extends React.Component<{}, {}> {
                   </div>
                 </div>
               </section>
-              <div className="AdrFormActions">
-                <a href="#/" className="AdrSecondaryButton" type="button">
-                  Cancel
-                </a>
+            </div>
+
+            <div id="approverSection" className="AdrFormSection" />
+            <div id="devApproverSection" className="AdrFormSection" />
+
+
+            <section className="AdrFormSection">
+              <div className="commentContainer">
+                <label className="AdrField">
+                  <span>Comment</span>
+                  <textarea
+                    id="approvercomment"
+                    speed-bind-validate="Comment"
+                    speed-include-control="false"
+                    speed-as-static="true"
+                    speed-validate-type="Comment"
+                    speed-event-switch="false"
+                    speed-validate-msg="Please tell us why you want to decline this process!"
+                  />
+                </label>
               </div>
+            </section>
+            <div className="AdrFormActions">
+              <a
+                href="#/"
+                className="AdrSecondaryButton center-text"
+                type="button"
+              >
+                Cancel
+              </a>
+              <ClientButton
+                func="MyNotesComponent.confirmSubmit"
+                clax="AdrSecondaryButton"
+                prop="Declined"
+                attr="id='declineBtn'"
+              >
+                Decline
+              </ClientButton>
+
+              <ClientButton
+                func="MyNotesComponent.confirmSubmit"
+                clax="AdrSecondaryButton"
+                prop="Revise"
+              >
+                More Info
+              </ClientButton>
+
+              <ClientButton
+                func="MyNotesComponent.confirmSubmit"
+                clax="AdrPrimaryButton"
+                prop="Approved"
+              >
+                Approve
+              </ClientButton>
             </div>
 
             <section className="AdrFormSection">
@@ -575,6 +616,6 @@ export default class NewRequest extends React.Component<{}, {}> {
   }
 
   public componentDidMount(): void {
-    window.loadViewRequestComponent();
+    window.loadMyNotesComponent();
   }
 }

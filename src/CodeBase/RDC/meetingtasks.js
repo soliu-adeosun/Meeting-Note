@@ -1,9 +1,9 @@
-loadReportComponent = function () {
-  console.log("Loading Report Component");
+loadMeetingTasksComponent = function () {
   if (MainApplication.cachedState.mode) {
-    whenReportDependeciesLoaded();
+    // whenMeetingTasksDependeciesLoaded();
+    meetingTasks();
   } else {
-    MainApplication.cachedState.pageStateCall = loadReportComponent;
+    MainApplication.cachedState.pageStateCall = loadMeetingTasksComponent;
   }
 };
 
@@ -11,7 +11,7 @@ loadReportComponent = function () {
 
 // var customWorkflowEngine;
 
-// MainApplication.ReportComponent.ApplicationDetails = function () {
+// MainApplication.MeetingTasksComponent.ApplicationDetails = function () {
 //   this.url = window.location.href;
 //   this.itemId = null;
 //   this.mode = null;
@@ -33,8 +33,13 @@ loadReportComponent = function () {
 //   this.groupProperties = {};
 //   this.nonConformanceCounter = 1;
 // };
-whenReportDependeciesLoaded = function () {
-  // console.log("Report Dependencies Loaded");
+meetingTasks = function () {
+  $("#newLoader").hide();
+  $("#meetingtasks-page").removeClass('hidden');
+  console.log("Meeting Tasks Page loaded");
+}
+whenMeetingTasksDependeciesLoaded = function () {
+  // console.log("MeetingTasks Dependencies Loaded");
   // globalDefinitions.callLoader();
   globalDefinitions.extendStages();
   globalDefinitions.sortResponse();
@@ -67,7 +72,7 @@ whenReportDependeciesLoaded = function () {
   };
 
   // $("#searchbtn").click(() => {
-  //     MainApplication.ReportComponent.retrieveRequest();
+  //     MainApplication.MeetingTasksComponent.retrieveRequest();
   // });
 
   // let debounceTimer;
@@ -76,24 +81,24 @@ whenReportDependeciesLoaded = function () {
     var searchQuery = $(this).val();
     var data = AppRequest.fullTableData || [];
     var filteredItems = MainApplication.reportSyncSearch(searchQuery, data);
-    MainApplication.ReportComponent.showTableData(filteredItems);
+    MainApplication.MeetingTasksComponent.showTableData(filteredItems);
   });
 
   $("#exportToExcel").click(() => {
-    MainApplication.ReportComponent.exportToExcel();
+    MainApplication.MeetingTasksComponent.exportToExcel();
   });
 
   $("#searchInput").on("keyup", function () {
     var searchQuery = $(this).val();
     var data = AppRequest.fullTableData || [];
     var filteredItems = MainApplication.reportSyncSearch(searchQuery, data);
-    MainApplication.ReportComponent.showTableData(filteredItems);
+    MainApplication.MeetingTasksComponent.showTableData(filteredItems);
   });
 
 
 
   // if (MainApplication.isUserAnActor) {
-    MainApplication.ReportComponent.retrieveRequest();
+    MainApplication.MeetingTasksComponent.retrieveRequest();
   // } else {
   //   globalDefinitions.HandlerError(
   //     "You are not authorized to access this page...",
@@ -108,7 +113,7 @@ whenReportDependeciesLoaded = function () {
   // }, 2000);
 };
 
-MainApplication.ReportComponent.retrieveRequest = function () {
+MainApplication.MeetingTasksComponent.retrieveRequest = function () {
   // globalDefinitions.callLoader();
   // var reportQuery = [
   //   {
@@ -174,7 +179,7 @@ MainApplication.ReportComponent.retrieveRequest = function () {
       "ExtraFeatures",
       "Notifications",
       "UserAccess",
-      "Reports",
+      "MeetingTaskss",
       "Delegate",
       "RequirementStatement",
       "JustificationStatement",
@@ -208,12 +213,12 @@ MainApplication.ReportComponent.retrieveRequest = function () {
       $("#pendingRequest").text(pendingItems.length);
       $("#completedRequest").text(completedItems.length);
 
-      MainApplication.ReportComponent.showTableData(tableData);
+      MainApplication.MeetingTasksComponent.showTableData(tableData);
     },
   );
 };
 
-MainApplication.ReportComponent.showTableData = function (tableData) {
+MainApplication.MeetingTasksComponent.showTableData = function (tableData) {
   AppRequest.dataForExport = tableData;
   if (tableData.length === 0) {
     $("#tasktable").hide();
@@ -231,9 +236,9 @@ MainApplication.ReportComponent.showTableData = function (tableData) {
   globalDefinitions.closeLoader();
 };
 
-MainApplication.ReportComponent.exportToExcel = function () {
+MainApplication.MeetingTasksComponent.exportToExcel = function () {
   var excelName =
-    "AppDeveklopmentReport" + $spcontext.stringnifyDate() + ".csv";
+    "AppDeveklopmentMeetingTasks" + $spcontext.stringnifyDate() + ".csv";
   var dataStringHeader = [
     "Ref ID",
     "Process Name",
@@ -269,10 +274,10 @@ MainApplication.ReportComponent.exportToExcel = function () {
     excelData = "\uFEFF" + excelData;
   });
 
-  MainApplication.ReportComponent.downloadData(excelName, excelData);
+  MainApplication.MeetingTasksComponent.downloadData(excelName, excelData);
 };
 
-MainApplication.ReportComponent.downloadData = function (excelname, data) {
+MainApplication.MeetingTasksComponent.downloadData = function (excelname, data) {
   if (navigator.msSaveOrOpenBlob) {
     var blobContent = data;
     // Works for Internet Explorer and Microsoft Edge
@@ -303,25 +308,25 @@ MainApplication.ReportComponent.downloadData = function (excelname, data) {
   }
 };
 
-MainApplication.ReportComponent.validateCSVContent = function (data) {
+MainApplication.MeetingTasksComponent.validateCSVContent = function (data) {
   if (typeof data == "string") {
     //data = data.replace(/,/g, "~");
     data = data.replace(/\n/g, "");
     data = data.replace(/\r/g, "");
     data = data.replace(/\r\n/g, "");
-    data = MainApplication.ReportComponent.encloseStringWithCommaCheck(data);
+    data = MainApplication.MeetingTasksComponent.encloseStringWithCommaCheck(data);
   }
   return data;
 };
 
-MainApplication.ReportComponent.encloseStringWithCommaCheck = function (value) {
+MainApplication.MeetingTasksComponent.encloseStringWithCommaCheck = function (value) {
   if (value.includes(",")) {
     return '"' + value + '"';
   }
   return value;
 };
 
-MainApplication.ReportComponent.updateDateConstraints = function () {
+MainApplication.MeetingTasksComponent.updateDateConstraints = function () {
   var startDate = $("#requeststrDate").val();
   var endDate = $("#requestendDate").val();
   if (startDate) {

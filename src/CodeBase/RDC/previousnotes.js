@@ -1,15 +1,16 @@
-loadApproveRequestComponent = function () {
+loadPreviousNotesComponent = function () {
   if (MainApplication.cachedState.mode) {
-    whenApproveRequestDependeciesLoaded();
+    // whenPreviousNotesDependeciesLoaded();
+    previousNotes();
   } else {
-    MainApplication.cachedState.pageStateCall = loadApproveRequestComponent;
+    MainApplication.cachedState.pageStateCall = loadPreviousNotesComponent;
   }
 };
 
 var AppRequest;
 var customWorkflowEngine;
 
-MainApplication.ApproveRequestComponent.ApplicationDetails = function () {
+MainApplication.PreviousNotesComponent.ApplicationDetails = function () {
   this.url = window.location.href;
   this.itemId = null;
   this.requestDetails = {};
@@ -28,7 +29,12 @@ MainApplication.ApproveRequestComponent.ApplicationDetails = function () {
   this.mode = null;
 };
 
-whenApproveRequestDependeciesLoaded = function () {
+previousNotes = function () {
+  $("#newLoader").hide();
+  $("#previousnotes-page").removeClass("hidden");
+  console.log("Previous Notes page loaded");
+}
+whenPreviousNotesDependeciesLoaded = function () {
   // globalDefinitions.callLoader();
   globalDefinitions.extendStages();
   $spcontext.assignAttributes();
@@ -50,7 +56,7 @@ whenApproveRequestDependeciesLoaded = function () {
     return passed;
   };
 
-  AppRequest = new MainApplication.ApproveRequestComponent.ApplicationDetails();
+  AppRequest = new MainApplication.PreviousNotesComponent.ApplicationDetails();
   globalDefinitions.extendStages();
   customWorkflowEngine = new WorkflowManagerEngine(CurrentUserProperties);
   globalDefinitions.SetWorkflowRouting(customWorkflowEngine);
@@ -78,13 +84,13 @@ whenApproveRequestDependeciesLoaded = function () {
   };
 
   $spcontext.applyValidationEvents();
-  MainApplication.ApproveRequestComponent.recoverListData();
+  MainApplication.PreviousNotesComponent.recoverListData();
   // setTimeout(function () {
   // 	globalDefinitions.closeLoader();
   // }, 2000);
 };
 
-MainApplication.ApproveRequestComponent.recoverListData = function () {
+MainApplication.PreviousNotesComponent.recoverListData = function () {
   if (AppRequest.itemId !== null && AppRequest.itemId !== "") {
     var query = speedctxRoot.camlBuilder([
       {
@@ -196,7 +202,7 @@ MainApplication.ApproveRequestComponent.recoverListData = function () {
 
                     if (typeof error === "undefined") {
                       if (listProperties.Current_Approver_Code === "AA3") {
-                        MainApplication.ApproveRequestComponent.renderModificationPeoplePicker(
+                        MainApplication.PreviousNotesComponent.renderModificationPeoplePicker(
                           {
                             pickerId: "Developer",
                             label: "Developer",
@@ -228,7 +234,7 @@ MainApplication.ApproveRequestComponent.recoverListData = function () {
                         MainApplication.DateConstraints.linkStartAndEnd(startEl, endEl);
                       }
                       if (listProperties.Current_Approver_Code === "AA4") {
-                        MainApplication.ApproveRequestComponent.renderModificationPeoplePickerReadonly(
+                        MainApplication.PreviousNotesComponent.renderModificationPeoplePickerReadonly(
                           {
                             pickerId: "Developer",
                             label: "Developer",
@@ -268,7 +274,7 @@ MainApplication.ApproveRequestComponent.recoverListData = function () {
                         `);
                       }
                       if (listProperties.Current_Approver_Code === "AA5") {
-                        MainApplication.ApproveRequestComponent.renderModificationPeoplePickerReadonly(
+                        MainApplication.PreviousNotesComponent.renderModificationPeoplePickerReadonly(
                           {
                             pickerId: "Developer",
                             label: "Developer",
@@ -314,7 +320,7 @@ MainApplication.ApproveRequestComponent.recoverListData = function () {
                         );
                       }
                       if (listProperties.Current_Approver_Code === "AA6") {
-                        MainApplication.ApproveRequestComponent.renderModificationPeoplePickerReadonly(
+                        MainApplication.PreviousNotesComponent.renderModificationPeoplePickerReadonly(
                           {
                             pickerId: "Developer",
                             label: "Developer",
@@ -626,7 +632,7 @@ listProperties.Delegate = (listProperties.Delegate && listProperties.Delegate.va
   }
 };
 
-MainApplication.ApproveRequestComponent.confirmSubmit = function (actionTaken) {
+MainApplication.PreviousNotesComponent.confirmSubmit = function (actionTaken) {
   $("#confirmModal").modal("show");
   if (actionTaken === "Revise" || actionTaken === "Declined") {
     if (actionTaken === "Revise") {
@@ -648,17 +654,17 @@ MainApplication.ApproveRequestComponent.confirmSubmit = function (actionTaken) {
   }
   AppRequest.actionTaken = actionTaken;
   MainApplication.confirmAction =
-    MainApplication.ApproveRequestComponent.actionConfirmed;
+    MainApplication.PreviousNotesComponent.actionConfirmed;
 };
 
-MainApplication.ApproveRequestComponent.actionConfirmed = function () {
+MainApplication.PreviousNotesComponent.actionConfirmed = function () {
   $("#confirmModal").modal("hide");
-  MainApplication.ApproveRequestComponent.saveDataToList(
+  MainApplication.PreviousNotesComponent.saveDataToList(
     AppRequest.actionTaken,
   );
 };
 
-MainApplication.ApproveRequestComponent.saveDataToList = function (actionTaken) {
+MainApplication.PreviousNotesComponent.saveDataToList = function (actionTaken) {
   globalDefinitions.onActionClicked();
 
   const stageCode = AppRequest.requestDetails.Current_Approver_Code;
@@ -871,10 +877,10 @@ MainApplication.ApproveRequestComponent.saveDataToList = function (actionTaken) 
   // ------------------------------------------------------------------
   console.log("Form Data to be submitted:", formData);
   globalDefinitions.onActionCompleted();
-  MainApplication.ApproveRequestComponent.proceedToList(formData);
+  MainApplication.PreviousNotesComponent.proceedToList(formData);
 };
 
-MainApplication.ApproveRequestComponent.proceedToList = function (formData) {
+MainApplication.PreviousNotesComponent.proceedToList = function (formData) {
   globalDefinitions.callLoader();
 
   formData.ID = AppRequest.requestDetails.ID;
@@ -897,7 +903,7 @@ MainApplication.ApproveRequestComponent.proceedToList = function (formData) {
   globalDefinitions.closeLoader();
 };
 
-MainApplication.ApproveRequestComponent.renderModificationPeoplePicker = function ({
+MainApplication.PreviousNotesComponent.renderModificationPeoplePicker = function ({
   pickerId = "Developer",
   label = "Developer",
   placeholder = "Select a Developer",
@@ -976,7 +982,7 @@ MainApplication.ApproveRequestComponent.renderModificationPeoplePicker = functio
   });
 };
 
-MainApplication.ApproveRequestComponent.renderModificationPeoplePickerReadonly = function ({
+MainApplication.PreviousNotesComponent.renderModificationPeoplePickerReadonly = function ({
   pickerId = "Developer",
   label = "Developer",
   placeholder = "Select a Developer",

@@ -4,14 +4,14 @@ import { NewLoader } from "../../../../Global/NewLoader";
 // import { NewLoader } from "../../../../Global/NewLoader";
 // import ClientButton from "../../../../Global/ClientButton";
 
-require("dashboard");
+require("previousnotes");
 
-export default class Dashboard extends React.Component<{}, {}> {
+export default class PreviousNotes extends React.Component<{}, {}> {
   public render(): React.ReactElement {
     return (
         <>
             <NewLoader />
-            <div className="hidden" id="dashboard-page">
+            <div className="hidden" id="previousnotes-page">
                 <div className="AdrPage">
                     <section className="AdrHero">
                         <div>
@@ -78,6 +78,6 @@ export default class Dashboard extends React.Component<{}, {}> {
   }
 
   public componentDidMount(): void {
-    window.loadDashboardComponent();
+    window.loadPreviousNotesComponent();
   }
 }

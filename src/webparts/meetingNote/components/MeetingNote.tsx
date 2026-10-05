@@ -3,11 +3,12 @@ import type { IMeetingNoteProps } from './IMeetingNoteProps';
 
 import {Route, Routes, HashRouter} from "react-router-dom";
 import {Layout} from "../../../Global/Layout";
-import Dashboard from './pages/Dashboard';
-import NewRequest from "./pages/NewRequest";
-import Report from './pages/Report';
-import ViewRequest from './pages/ViewRequest';
-import ApproveRequest from './pages/ApproveRequest';
+import NewNote from "./pages/NewNote";
+import MeetingTasks from './pages/MeetingTasks';
+import PreviousNotes from './pages/PreviousNotes';
+import MyNotes from './pages/MyNotes';
+import ViewNote from './pages/ViewNote';
+import ViewTask from './pages/ViewTask';
 import { HelmetProvider } from "react-helmet-async";
 
 require('main');
@@ -15,11 +16,12 @@ require('main');
 declare global {
     interface Window {
         globalProp: any;
-        loadDashboardComponent: () => void;
-        loadNewRequestComponent: () => void;
-        loadReportComponent : () => void;
-        loadViewRequestComponent : () => void;
-        loadApproveRequestComponent : () => void;
+        loadNewNoteComponent: () => void;
+        loadMeetingTasksComponent: () => void;
+        loadPreviousNotesComponent: () => void;
+        loadMyNotesComponent: () => void;
+        loadViewNoteComponent: () => void;
+        loadViewTaskComponent: () => void;
     }
 }
 
@@ -33,11 +35,12 @@ export default class AppDev extends React.Component<IMeetingNoteProps> {
           <HashRouter>
               <Routes>
                   <Route path="/" element={<Layout />}>
-                      <Route index element={<Dashboard />} />
-                      <Route path="newrequest" element={<NewRequest />} />
-                      <Route path="report" element={<Report />} />
-                      <Route path="viewrequest" element={<ViewRequest />} />
-                      <Route path="approverequest" element={<ApproveRequest />} />
+                        <Route index element={<MeetingTasks />} />
+                        <Route path="newmeetingnote" element={<NewNote />} />
+                        <Route path="previousnotes" element={<PreviousNotes />} />
+                        <Route path="mynotes" element={<MyNotes />} />
+                        <Route path="viewnote" element={<ViewNote />} />
+                        <Route path="viewtask" element={<ViewTask />} />
                   </Route>
               </Routes>
           </HashRouter>
