@@ -430,7 +430,6 @@
   .status-add:hover { background: var(--accent-dark) !important; }
 
   .actions-blank {
-    height: 36px;
     border: 1px solid var(--border);
     border-radius: 0 0 6px 6px;
     margin-top: -1px;
@@ -506,3 +505,37 @@
   .hide-week {
     visibility: hidden;
   }
+
+
+  
+.actions-blank .actions-table button {
+  padding: 5px 10px;
+  margin: 2px;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.edit-action-btn {
+  background: #e8f1ff;
+  color: #1d4ed8;
+}
+
+.delete-action-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+#cancel-action-edit {
+  margin-left: 5px;
+  color: #b91c1c;
+}
+
+.update-task-btn {
+  background: #fef3c7;
+  color: #78350f;
+  width: auto !important;
+  height: auto !important;
+  padding: 3px 8px;
+  border-radius: 5px;
+}

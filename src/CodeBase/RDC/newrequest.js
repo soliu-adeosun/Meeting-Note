@@ -71,6 +71,8 @@ function whenNewRequestDependeciesLoaded() {
   PeoplePicker.defaultValues = {};
   PeoplePicker.initializePeoplePickers(MainApplication.staffList);
 
+  MainApplication.NewRequestComponent.editingActionIndex = null;
+
   $(document).on("change", "#start-time", function () {
     const startTime = $(this).val();
     const $endTime = $("#end-time");
@@ -88,6 +90,7 @@ $(document).on("change", "#action-type", function () {
 });
 
 // Add the current action item to the output table
+
 $(document).on("click", "#add-task-btn", function () {
   const type = $("#action-type").val();
   const $assignee = $("#action-assignee");
@@ -96,6 +99,9 @@ $(document).on("click", "#add-task-btn", function () {
   const task = $("#action-task").val().trim();
   const dueDate = $("#action-due-date").val();
   const actionPlan = $("#action-plan").val().trim();
+
+  const component = MainApplication.NewRequestComponent;
+  const editingIndex = component.editingActionIndex;
 
   if (!type) {
     globalDefinitions.HandlerError("Please select Division or Person.");
@@ -127,29 +133,96 @@ $(document).on("click", "#add-task-btn", function () {
     ActionPlan: actionPlan
   };
 
-  AppRequest.actionItems.push(actionItem);
-  MainApplication.NewRequestComponent.renderActionItems();
+  if (editingIndex !== null) {
+    // Update existing item
+    AppRequest.actionItems[editingIndex] = actionItem;
+  } else {
+    // Add new item
+    AppRequest.actionItems.push(actionItem);
+  }
 
-  // Reset the entry form
-  $("#action-type").val("");
-  $("#action-assignee-container").empty();
-  $("#action-task").val("");
-  $("#action-due-date").val("");
-  $("#action-plan").val("");
+  component.renderActionItems();
+  component.resetActionForm();
 });
 
+$(document).on("click", ".edit-action-btn", function () {
+  const component = MainApplication.NewRequestComponent;
+  const index = Number($(this).attr("data-index"));
+  const item = AppRequest.actionItems[index];
+
+  if (!item) return;
+
+  component.editingActionIndex = index;
+
+  $("#action-type").val(item.Type);
+
+  // Rebuild the appropriate Division or Person dropdown
+  component.bindActionAssignee(item.Type);
+
+  // Restore the selected assignee
+  $("#action-assignee")
+    .val(item.Type === "Person" ? item.Email : item.Name)
+    .trigger("change");
+
+  $("#action-task").val(item.Task);
+  $("#action-due-date").val(item.DueDate);
+  $("#action-plan").val(item.ActionPlan);
+
+  // Change the Add button into an Update button
+  $("#add-task-btn").text("Update").attr("title", "Update Action").removeClass("icon-btn").addClass("update-task-btn");
+
+  // Add a cancel button only once
+  if (!$("#cancel-action-edit").length) {
+    $("#add-task-btn").after(`
+      <button
+        type="button"
+        id="cancel-action-edit"
+        class="icon-btn"
+        title="Cancel Edit"
+      >×</button>
+    `);
+  }
+});
+
+// Delete an action item
+$(document).on("click", ".delete-action-btn", function () {
+  const component = MainApplication.NewRequestComponent;
+  const index = Number($(this).attr("data-index"));
+
+  if (index < 0 || index >= AppRequest.actionItems.length) return;
+
+  AppRequest.actionItems.splice(index, 1);
+
+  // Reset the form if the item being edited was deleted
+  if (component.editingActionIndex === index) {
+    component.resetActionForm();
+  } else if (
+    component.editingActionIndex !== null &&
+    component.editingActionIndex > index
+  ) {
+    // Adjust the edit index after removing an earlier item
+    component.editingActionIndex--;
+  }
+
+  component.renderActionItems();
+});
+
+// Cancel editing
+$(document).on("click", "#cancel-action-edit", function () {
+  MainApplication.NewRequestComponent.resetActionForm();
+});
 
 
   $spcontext.applyValidationEvents();
 
   setTimeout(function () {
-        if (AppRequest.itemId !== null && AppRequest.itemId !== "") {
-            MainApplication.NewRequestComponent.recoverListData();
-        }
-        $("#newLoader").hide();
-        $("#newrequest-page").removeClass("hidden");
-        globalDefinitions.closeLoader();
-    }, 1000);
+    if (AppRequest.itemId !== null && AppRequest.itemId !== "") {
+        MainApplication.NewRequestComponent.recoverListData();
+    }
+    $("#newLoader").hide();
+    $("#newrequest-page").removeClass("hidden");
+    globalDefinitions.closeLoader();
+  }, 1000);
   
 }
 
@@ -266,6 +339,8 @@ MainApplication.NewRequestComponent.saveDataToList = function () {
       formData.Absentees = JSON.stringify(formData.Absentees);
       formData.Agenda = JSON.stringify(formData.Agenda);
       formData.Discussion = JSON.stringify(formData.Discussion);
+      formData.Tasks = JSON.stringify(AppRequest.actionItems);
+      formData.NumberOfTaskItems = AppRequest.actionItems.length;
 
       formData.StartTime = $("#start-time").val();
       formData.EndTime = $("#end-time").val();
@@ -304,6 +379,8 @@ MainApplication.NewRequestComponent.saveDataToListAsDraft = function () {
       formData.Absentees = JSON.stringify(formData.Absentees);
       formData.Agenda = JSON.stringify(formData.Agenda);
       formData.Discussion = JSON.stringify(formData.Discussion);
+      formData.Tasks = JSON.stringify(AppRequest.actionItems);
+      formData.NumberOfTaskItems = AppRequest.actionItems.length;
 
       formData.StartTime = $("#start-time").val();
       formData.EndTime = $("#end-time").val();
@@ -324,499 +401,80 @@ MainApplication.NewRequestComponent.saveDataToListAsDraft = function () {
 }
   // console.log("Form Data to be submitted:", formData);
 }
+
 MainApplication.NewRequestComponent.proceedToList = function (formData) {
-  
-		if (AppRequest.itemId == null) {
-      var dateCreatedCode = $spcontext.stringnifyDate({
-        includeTime: true,
-        timeSpace: false,
-        format: "dd-mm-yy",
+  const component = MainApplication.NewRequestComponent;
+  const isSubmit = AppRequest.actionTaken === "submit";
+
+  // Handle completion after the parent and any required tasks are saved
+  const finishRequest = function () {
+    if (isSubmit) {
+      globalDefinitions.HandlerSuccess("Note created successfully");
+
+      globalDefinitions.AuditLogManager_SaveLog({
+        Action: `Submitted Note ${formData.ReferenceID}`
       });
+    } else {
+      globalDefinitions.HandlerSuccess("Note saved as draft successfully");
 
-      formData.ReferenceID = globalDefinitions.stageDefinitions.workflowcode + dateCreatedCode;
+      globalDefinitions.AuditLogManager_SaveLog({
+        Action: `Saved Note ${formData.ReferenceID}`
+      });
+    }
 
-      console.log("New data about to be created: ", formData);
-			speedctxRoot.createItems([formData], globalDefinitions.stageDefinitions.listname, function (createdItemsProperties) {
-         if (AppRequest.actionTaken === "submit") {
-            globalDefinitions.HandlerSuccess(`Note created successfully`);
-            $spcontext.redirect("#/", false);
-            globalDefinitions.closeLoader();
-
-            globalDefinitions.AuditLogManager_SaveLog({
-              Action: `Submitted Note  ${formData.ReferenceID}`,
-            });
-					// });
-          } else {
-            globalDefinitions.HandlerSuccess(`Note saved as draft successfully`);
-            $spcontext.redirect("#/", false);
-            globalDefinitions.closeLoader();
-            globalDefinitions.AuditLogManager_SaveLog({
-              Action: `Saved Note  ${formData.ReferenceID}`,
-            });
-          }
-			});
-		} else {
-      console.log("New data about to be updated: ", formData);
-			formData.ID = AppRequest.requestDetails.ID;
-
-			speedctxRoot.updateItems([formData], globalDefinitions.stageDefinitions.listname, function () {
-				// if (AppRequest.requestDetails.ReturnForCorrection !== "Yes") {
-				// 	AppRequest.requestDetails.Current_Approver = formData.Current_Approver;
-				// }
-
-				if (AppRequest.actionTaken === "submit") {
-            globalDefinitions.HandlerSuccess(`Note created successfully`);
-            $spcontext.redirect("#/", false);
-            globalDefinitions.closeLoader();
-
-            globalDefinitions.AuditLogManager_SaveLog({
-              Action: `Submitted Note  ${formData.ReferenceID}`,
-            });
-					// });
-          } else {
-            globalDefinitions.HandlerSuccess(`Note saved as draft successfully`);
-            $spcontext.redirect("#/", false);
-            globalDefinitions.closeLoader();
-            globalDefinitions.AuditLogManager_SaveLog({
-              Action: `Saved Note  ${formData.ReferenceID}`,
-            });
-          }
-			});
-		}
+    $spcontext.redirect("#/", false);
+    globalDefinitions.closeLoader();
     globalDefinitions.onActionCompleted();
+  };
 
-};
+  // Create tasks only when the action is Submit
+  const saveTasksIfSubmitted = function () {
+    if (!isSubmit) {
+      finishRequest();
+      return;
+    }
 
+    component.createMeetingTasks(formData.ReferenceID, function () {
+      finishRequest();
+    });
+  };
 
+  if (AppRequest.itemId == null) {
+    var dateCreatedCode = $spcontext.stringnifyDate({
+      includeTime: true,
+      timeSpace: false,
+      format: "dd-mm-yy"
+    });
 
-MainApplication.NewRequestComponent.recoverListData = function () {
-  if (AppRequest.itemId !== null && AppRequest.itemId !== "") {
-    var query = speedctxRoot.camlBuilder([
-      {
-        rowlimit: 1,
-      },
+    formData.ReferenceID =
+      globalDefinitions.stageDefinitions.workflowcode + dateCreatedCode;
 
-      {
-        operator: "Eq",
-        field: "ReferenceID",
-        type: "Text",
-        val: AppRequest.itemId,
-      },
-      {
-        evaluator: "Or",
-        operator: "Eq",
-        field: "Approval_Status",
-        type: "Text",
-        val: globalDefinitions.stageDefinitions.save,
-      },
-      {
-        evaluator: "Or",
-        operator: "Eq",
-        field: "Approval_Status",
-        type: "Text",
-        val: "Pending",
-      },
-    ]);
+    console.log("New data about to be created:", formData);
 
-    var extraProperties = [
-      "ID",
-      "Title",
-      "ReferenceID",
-      "Current_Approver",
-      "Current_Approver_Code",
-      "Approval_Status",
-
-      "RequestCreated",
-      "InitiatorEmailAddress",
-      "InitiatorLogin",
-      "Transaction_History",
-      "ReturnForCorrection",
-
-      "Modified",
-      "PendingUserEmail",
-      "PendingUserLogin",
-      "Attachment_Folder",
-      "AttachmentURL",
-      "Comment",
-      "HOD",
-      "Division",
-      "ProcessName",
-      "Modified",
-      "IsApprovalsNeeded",
-      "ConditionalApproval",
-      "RetentionPeriod",
-      "Period",
-      "DivisionsInvolved",
-      "StepByStepProcess",
-      "ExistingLink",
-      "PainPoints",
-      "CriteriaForCompletion",
-      "IsProcessRelated",
-      "PullDataFromAnotherSystem",
-      "Approvers",
-      "MaxApprovalTime",
-      "RevokeUser",
-      "ProcessOwner",
-      "OtherFeatures",
-      "ExtraFeatures",
-      "Notifications",
-      "UserAccess",
-      "Reports",
-      "TimeKeeper",
-      "RequirementStatement",
-      "JustificationStatement",
-      "DateRequired",
-      "RelatedProcessInformation",
-      "SystemInformation",
-      "ConditionalApprovalInformation",
-      "RequestType",
-      "ModificationType",
-      "CurrentFunctionality",
-      "WhatShouldChange",
-      "ModificationReason",
-      "SystemsAffected",
-      "IsOtherUsersNeeded",
-      "ProposedStartDate",
-      "EndDate",
-      "UATDate",
-      "Status",
-      "Developer",
-      "IsOtherUsersNeeded"
-    ];
-
-    speedctxRoot.getListToControl(
+    speedctxRoot.createItems(
+      [formData],
       globalDefinitions.stageDefinitions.listname,
-      query,
-      extraProperties,
-      function (listProperties) {
-        if (listProperties.RequestType === "New" || listProperties.ModificationType === "Major") {
-          // MainApplication.NewRequestComponent.prepareAllTables();
-          MainApplication.NewRequestComponent.toggleMainForm(true);
-        }
-        if ($.isEmptyObject(listProperties)) {
-          MainApplication.notyf.error("Process does not exist...");
-          $spcontext.redirect("#/", false);
-          globalDefinitions.closeLoader();
-        } else {
-          // customWorkflowEngine.routeEngine(customWorkflowEngine).updateRoutesinFlow(listProperties, function (resolved) {
-          //     customWorkflowEngine.routeEngine(customWorkflowEngine).PageSecurity(
-          //         customWorkflowEngine.stages.securityModeView,
-          //         listProperties.Current_Approver,
-          //         listProperties.Approval_Status,
-          //         function (error) {
-                    // if (MainApplication.configuredTaskMembers[listProperties.Current_Approver].belongs) {
-
-                    if (typeof error === "undefined") {
-                      console.log("Recovering saved draft data:", listProperties);
-                      listProperties.RequestCreated = $spcontext.stringnifyDate({
-                        value: listProperties.RequestCreated,
-                        includeTime: false,
-                        format: "dd/mm/yy",
-                      });
-
-                      // <input type="date"> requires ISO yyyy-mm-dd - "dd/mm/yy"
-                      // (the format ViewRequest's readonly textarea is fine with)
-                      // gets silently rejected by the native date control, which
-                      // is why the field wasn't rendering. Verify "yyyy-mm-dd" is
-                      // a format string $spcontext.stringnifyDate actually
-                      // recognizes; if not, format it manually here instead.
-                      // stringnifyDate ignores the "yyyy-mm-dd" format request
-                      // and always returns dd-mm-yyyy (confirmed: got back
-                      // "08-08-2026") - so reorder its output ourselves rather
-                      // than relying on the format param.
-                      listProperties.DateRequired = $spcontext.stringnifyDate({
-                        value: listProperties.DateRequired,
-                        includeTime: false,
-                        format: "dd/mm/yy",
-                      });
-                      listProperties.DateRequired = MainApplication.NewRequestComponent.toISODateInput(listProperties.DateRequired);
-
-                      // Same reasoning as DateRequired above - DateRequired
-                      // is also a native <input type="date"> and needs ISO yyyy-mm-dd.
-                      // if (listProperties.DateRequired) {
-                      //   listProperties.DateRequired = $spcontext.stringnifyDate({
-                      //     value: listProperties.DateRequired,
-                      //     includeTime: false,
-                      //     format: "dd/mm/yy",
-                      //   });
-                      //   listProperties.DateRequired = MainApplication.NewRequestComponent.toISODateInput(listProperties.DateRequired);
-                      // }
-
-                      listProperties.StepByStepProcess = $spcontext.JSONToObject(listProperties.StepByStepProcess);
-                      listProperties.Approvers = $spcontext.JSONToObject(listProperties.Approvers);
-                      listProperties.Notifications = $spcontext.JSONToObject(listProperties.Notifications);
-                      listProperties.UserAccess = $spcontext.JSONToObject(listProperties.UserAccess);
-                      listProperties.Reports = $spcontext.JSONToObject(listProperties.Reports);
-                      listProperties.DivisionsInvolved = $spcontext.JSONToObject(listProperties.DivisionsInvolved);
-                      // NOT routed through MainApplication.buildReadOnlyData here -
-                      // that reshapes each entry to {title, description, enabled,
-                      // note} and drops "id", which is exactly what
-                      // renderEditableExtraFeaturesTable needs to match a saved
-                      // row back to the right checkbox. Keep the raw
-                      // {id, enabled, note} shape that was actually saved.
-                      listProperties.ExtraFeatures = $spcontext.JSONToObject(listProperties.ExtraFeatures);
-
-                      listProperties.Transaction_History =
-                        $spcontext.JSONToObject(
-                          listProperties.Transaction_History,
-                        );
-                      listProperties.AttachmentURL = $spcontext.JSONToObject(
-                        listProperties.AttachmentURL,
-                        "object",
-                      );
-
-                      // was: listProperties.TimeKeeper = listProperties.TimeKeeper.email;
-listProperties.TimeKeeper = (listProperties.TimeKeeper && (listProperties.TimeKeeper.email || listProperties.TimeKeeper.value)) || "";
-
-                      AppRequest.FolderUrl = listProperties.Attachment_Folder;
-                      AppRequest.FileUrls = $spcontext.deferenceObject(
-                        listProperties.AttachmentURL,
-                      );
-
-                      for (var file in AppRequest.FileUrls) {
-                        $spcontext.filesDictionary[file] = {
-                          files: AppRequest.FileUrls[file],
-                        };
-                      }
-
-                      // AppRequest.FileUrls = $spcontext.deferenceObject(listProperties.AttachmentURL);
-
-                      if (listProperties.Transaction_History.length !== 0) {
-                        $("#transaction-history").show();
-                        globalDefinitions.displayHistory(
-                          listProperties.Transaction_History,
-                        );
-                      }
-
-                      MainApplication.NewRequestComponent.populateSelect2Editable(listProperties.DivisionsInvolved);
-                      MainApplication.NewRequestComponent.renderEditableExtraFeaturesTable("extraFeaturesTable", listProperties.ExtraFeatures);
-                      // if (listProperties.Current_Approver !== "Employee" && listProperties.Current_Approver_Code !== "AA1") {
-                      // 	listProperties.Comment = "";
-                      // }
-
-
-                      AppRequest.requestDetails = listProperties;
-
-                      // htmlBind only fills in elements that currently carry a
-                      // speed-bind-validate attribute. #mainRequestFormWrapper
-                      // starts hidden by default (see the page-load toggle call),
-                      // which strips that attribute from EVERY field inside it -
-                      // Period, ProcessName, RequirementStatement, all of it, not
-                      // just the handful of conditional ones below. Left alone,
-                      // htmlBind would run against a wrapper with no bindable
-                      // fields and only the handful of fields we set manually
-                      // further down would end up populated. Un-hiding (and so
-                      // restoring those attributes) has to happen before htmlBind,
-                      // not after.
-                      const savedRequestType = listProperties.RequestType || "New";
-                      MainApplication.NewRequestComponent.toggleRequestType(savedRequestType);
-                      if (savedRequestType === "Modification") {
-                        MainApplication.NewRequestComponent.toggleModificationType(listProperties.ModificationType);
-                      }
-
-                      $spcontext.htmlBind(listProperties);
-
-                      // Dynamic tables (StepByStepProcess, Approvers, Notifications,
-                      // UserAccess, Reports) aren't touched by htmlBind - they're
-                      // managed separately through ctx.dynamicTableSettings. Without
-                      // this, a returning Draft always shows the single blank row
-                      // initializeDynamicTable() added on page load, regardless of
-                      // what was actually saved.
-                      try{
-                        MainApplication.NewRequestComponent.hydrateDynamicTables({
-                          StepByStepProcess: listProperties.StepByStepProcess,
-                          Approvers: listProperties.Approvers,
-                          Notifications: listProperties.Notifications,
-                          UserAccess: listProperties.UserAccess,
-                          Reports: listProperties.Reports,
-                        });
-                      } catch(error){};
-
-                      // toggleApprovalStages/toggleOtherPeriod/toggleRetentionPeriod
-                      // already ran once at page load, before any draft value existed,
-                      // so whatever they decided then (fields hidden, nothing required)
-                      // is stale. Re-run them now that the real saved values are bound,
-                      // so a draft with IsApprovalsNeeded="Yes" or a custom Period
-                      // actually shows the right section instead of staying hidden.
-                      MainApplication.NewRequestComponent.toggleOtherPeriod(listProperties.Period);
-                      MainApplication.NewRequestComponent.toggleRetentionPeriod(listProperties.RetentionPeriod);
-                      MainApplication.NewRequestComponent.toggleApprovalStages();
-                      MainApplication.NewRequestComponent.toggleOtherUsersNeeded();
-                      MainApplication.NewRequestComponent.togglePullFromOtherSystem(listProperties.PullDataFromAnotherSystem);
-                      MainApplication.NewRequestComponent.toggleRelatedProcess(listProperties.RelatedProcessInformation);
-
-                      // Request Type / Modification Type were already resolved
-                      // above, before htmlBind ran (that's what un-hides the
-                      // wrapper in time for htmlBind to actually find its
-                      // fields). No need to re-run it here.
-
-                      // if (AppRequest.requestDetails.Current_Approver !== 'Employee'){
-                      $spcontext.attachmentLinkBind(
-                        listProperties.AttachmentURL,
-                      );
-                      // }
-                      // $spcontext.assignAttributes();
-                      // setTimeout(function () {
-
-                        // was "#viewrequest-page" - leftover from copy-pasting
-                        // ViewRequestComponent.recoverListData; NewRequest's page
-                        // shell uses #newrequest-page (see NewRequest.tsx / the
-                        // setTimeout below in whenNewRequestDependeciesLoaded).
-                        
-                        $("#conditionalApproval").val(listProperties.ConditionalApproval);
-                        $("#maxApprovalTime").val(listProperties.MaxApprovalTime);
-                        $('[speed-bind-validate="SystemInformation"]').val(listProperties.SystemInformation);
-                        $('[speed-bind-validate="RelatedProcessInformation"]').val(listProperties.RelatedProcessInformation);
-                        $("#requestType").val(listProperties.RequestType || "New");
-                        if (listProperties.RequestType === "Modification") {
-                          $("#modificationType").val(listProperties.ModificationType);
-                          if (listProperties.ModificationType === "Minor") {
-                            $('[speed-bind-validate="ProcessName"]').val(listProperties.ProcessName);
-                            $('[speed-bind-validate="ExistingLink"]').val(listProperties.ExistingLink);
-                            $('[speed-bind-validate="CurrentFunctionality"]').val(listProperties.CurrentFunctionality);
-                            $('[speed-bind-validate="WhatShouldChange"]').val(listProperties.WhatShouldChange);
-                            $('[speed-bind-validate="ModificationReason"]').val(listProperties.ModificationReason);
-                            $('[speed-bind-validate="SystemsAffected"]').val(listProperties.SystemsAffected);
-                            $('[speed-bind-validate="DateRequired"]').val(listProperties.DateRequired);
-                          }
-                        }
-                        PeoplePicker.setDefault("TimeKeeper", listProperties.TimeKeeper);
-                        PeoplePicker.initializePeoplePickers(MainApplication.staffList);
-                        $("#newrequest-page").removeClass("hidden");
-                        $("#newLoader").hide();
-                        globalDefinitions.closeLoader();
-                      // }, 2000);
-                    } else {
-                      globalDefinitions.HandlerError(
-                        "You are not allowed to access this request",
-                      );
-                      globalDefinitions.AuditLogManager_SaveLog({
-                        Action: `Unauthorized action on ${listProperties.ReferenceID}`,
-                        Message: "User is not allowed to view this request",
-                      });
-                      // setTimeout(function () {
-                        globalDefinitions.closeLoader();
-                      // }, 1000);
-                      $spcontext.redirect("#/", false);
-                    }
-
-                    // }
-            //       },
-            //     ); //commented here
-            // }); //commented here
-        }
-      },
+      function (createdItemsProperties) {
+        saveTasksIfSubmitted();
+      }
     );
   } else {
-    globalDefinitions.closeLoader();
-    MainApplication.notyf.error("Invalid Request...");
-    $spcontext.redirect("#/", false);
+    console.log("New data about to be updated:", formData);
+
+    formData.ID = AppRequest.requestDetails.ID;
+
+    // Preserve the existing ReferenceID when updating
+    formData.ReferenceID =
+      formData.ReferenceID || AppRequest.requestDetails.ReferenceID;
+
+    speedctxRoot.updateItems(
+      [formData],
+      globalDefinitions.stageDefinitions.listname,
+      function () {
+        saveTasksIfSubmitted();
+      }
+    );
   }
-};
-
-MainApplication.NewRequestComponent.renderAttachments = function (elementBindProperty, property, elementId) {
-
-    const container = $("div[speed-file-bind='" + elementBindProperty + "']");
-    const files = $spcontext.filesDictionary[property]?.files || [];
-
-    container.empty();
-
-    files.forEach((file, index) => {
-
-        let fileName, fileUrl = null;
-
-        if (typeof file === "string") {
-            fileUrl = file;
-            fileName = file.split("/").pop();
-        } else {
-            fileName = file.dataName;
-        }
-
-        const $p = $("<p>", {
-            id: `${elementBindProperty}display${index}`,
-            css: { color: "#002c4d" }
-        });
-
-        if (fileUrl) {
-            $("<a>", {
-                href: fileUrl,
-                text: fileName,
-                target: "_blank"
-            }).appendTo($p);
-        } else {
-            $p.text(fileName);
-        }
-
-        const $deleteBtn = $("<a>", {
-            href: "#",
-            text: " x",
-            class: "attachment-inline-delete",
-            "data-element": elementBindProperty,
-            "data-index": index,
-            "data-fileid": elementId,
-            css: {
-                color: "red",
-                cursor: "pointer",
-                paddingLeft: "5px"
-            }
-        });
-
-        $p.append($deleteBtn);
-        container.append($p);
-    });
-};
-
-MainApplication.NewRequestComponent.deleteRowAttachment = function (elementBindProperty, index, elementId) {
-
-    const el = document.getElementById(elementId);
-
-    let property =
-        el.getAttribute("speed-file-validate") ||
-        el.getAttribute("speed-file-bind");
-
-    const fileStore = $spcontext.filesDictionary[property];
-
-    if (!fileStore || !Array.isArray(fileStore.files)) return;
-
-    // Remove file safely
-    fileStore.files.splice(index, 1);
-
-    // Clear input (important for re-uploading same file)
-    $spcontext.clearFileInput(elementId);
-
-    // Re-render UI
-    MainApplication.NewRequestComponent.renderAttachments(
-        elementBindProperty,
-        property,
-        elementId
-    );
-};
-
-MainApplication.NewRequestComponent.clearAllAttachments = function (elementBindProperty, elementId) {
-
-    const el = document.getElementById(elementId);
-
-    let property =
-        el.getAttribute("speed-file-validate") ||
-        el.getAttribute("speed-file-bind");
-
-    const fileStore = $spcontext.filesDictionary[property];
-
-    if (!fileStore || !Array.isArray(fileStore.files)) return;
-
-    // Drain the array the same way deleteRowAttachment does it (splice), 
-    // but all at once instead of one by one
-    fileStore.files.splice(0, fileStore.files.length);
-
-    // Clear the actual file input
-    $spcontext.clearFileInput(elementId);
-
-    // Re-render UI (will render empty since files array is now empty)
-    MainApplication.NewRequestComponent.renderAttachments(
-        elementBindProperty,
-        property,
-        elementId
-    );
 };
 
 MainApplication.NewRequestComponent.prepareAllTables = function () {
@@ -962,10 +620,13 @@ MainApplication.NewRequestComponent.bindActionAssignee = function (type) {
 };
 
 // Render the collected action items into the output table
+
+
 MainApplication.NewRequestComponent.renderActionItems = function () {
   const $container = $(".actions-blank");
+  const component = MainApplication.NewRequestComponent;
 
-  if (!AppRequest.actionItems.length) {
+  if (!AppRequest.actionItems || !AppRequest.actionItems.length) {
     $container.empty();
     return;
   }
@@ -975,11 +636,26 @@ MainApplication.NewRequestComponent.renderActionItems = function () {
   AppRequest.actionItems.forEach(function (item, index) {
     rows += `
       <tr>
-        <td>${MainApplication.NewRequestComponent.escapeHtml(item.Name)}</td>
-        <td>${MainApplication.NewRequestComponent.escapeHtml(item.Email || "—")}</td>
-        <td>${MainApplication.NewRequestComponent.escapeHtml(item.Task)}</td>
-        <td>${MainApplication.NewRequestComponent.escapeHtml(item.DueDate)}</td>
-        <td>${MainApplication.NewRequestComponent.escapeHtml(item.ActionPlan)}</td>
+        <td>${component.escapeHtml(item.Name)}</td>
+        <td>${component.escapeHtml(item.Email || "—")}</td>
+        <td>${component.escapeHtml(item.Task)}</td>
+        <td>${component.escapeHtml(item.DueDate || "—")}</td>
+        <td>${component.escapeHtml(item.ActionPlan || "—")}</td>
+        <td>
+          <button
+            type="button"
+            class="edit-action-btn"
+            data-index="${index}"
+            title="Edit"
+          >Edit</button>
+
+          <button
+            type="button"
+            class="delete-action-btn"
+            data-index="${index}"
+            title="Delete"
+          >Delete</button>
+        </td>
       </tr>
     `;
   });
@@ -993,6 +669,7 @@ MainApplication.NewRequestComponent.renderActionItems = function () {
           <th>Task</th>
           <th>Due Date</th>
           <th>Action Plan</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -1002,10 +679,789 @@ MainApplication.NewRequestComponent.renderActionItems = function () {
   `);
 };
 
-MainApplication.NewRequestComponent.createNonConformanceItem = function(nonConformanceData) {
-    speedctxRoot.createItems([nonConformanceData], "NonConformanceRegister", function() {
-        globalDefinitions.AuditLogManager_SaveLog({
-            Action: `created non-conformance item for request ${nonConformanceData.Title}`
+MainApplication.NewRequestComponent.resetActionForm = function () {
+  const component = MainApplication.NewRequestComponent;
+
+  component.editingActionIndex = null;
+
+  $("#action-type").val("");
+  $("#action-assignee-container").empty();
+  $("#action-task").val("");
+  $("#action-due-date").val("");
+  $("#action-plan").val("");
+
+  $("#add-task-btn").text("+").attr("title", "Add Task").removeClass("update-task-btn").addClass("icon-btn");
+
+  $("#cancel-action-edit").remove();
+};
+
+MainApplication.NewRequestComponent.createMeetingTasks = function (
+  referenceID,
+  callback
+) {
+  const actionItems = AppRequest.actionItems || [];
+
+  if (!actionItems.length) {
+    if (callback) callback();
+    return;
+  }
+
+  const taskItems = actionItems.map(function (item) {
+    return {
+      ReferenceID: referenceID,
+      Title: item.Type,
+      Name: item.Name,
+      Email: item.Email || "",
+      Task: item.Task,
+      DueDate: item.DueDate,
+      ActionPlan: item.ActionPlans || "",
+    };
+  });
+
+  console.log("Meeting tasks to be created:", taskItems);
+
+  speedctxRoot.createItems(
+    taskItems,
+    "MeetingNoteTasks",
+    function (createdTasks) {
+      console.log("Meeting tasks created successfully:", createdTasks);
+
+      if (callback) callback();
+    }
+  );
+};
+
+MainApplication.NewRequestComponent.recoverListData = function () {
+  if (AppRequest.itemId !== null && AppRequest.itemId !== "") {
+
+    var query = speedctxRoot.camlBuilder([
+      {
+        rowlimit: 1,
+      },
+      {
+        operator: "Eq",
+        field: "ReferenceID",
+        type: "Text",
+        val: AppRequest.itemId,
+      },
+      {
+        operator: "Eq",
+        field: "Status",
+        type: "Text",
+        val: globalDefinitions.stageDefinitions.save,
+      },
+    ]);
+
+    var extraProperties = [
+      "ID",
+      "Title",
+      "ReferenceID",
+      "MeetingType",
+      "MeetingCategory",
+      "MeetingWeek",
+      "MeetingDate",
+      "RequiredTime",
+
+      "Attendees",
+      "TimeOff",
+      "TimeKeeper",
+
+      "Presenter",
+      "EngagementParticipant",
+
+      "AOB",
+      "StartTime",
+      "EndTime",
+
+      "Absentees",
+      "Agenda",
+      "Discussion",
+
+      "NumberOfTaskItems",
+      "Modified",
+      "Status",
+
+      "Reporter",
+      "Tasks",
+    ];
+
+    speedctxRoot.getListToControl(
+      globalDefinitions.stageDefinitions.listname,
+      query,
+      extraProperties,
+      function (listProperties) {
+
+        if ($.isEmptyObject(listProperties)) {
+          MainApplication.notyf.error("Process does not exist...");
+          $spcontext.redirect("#/", false);
+          globalDefinitions.closeLoader();
+          return;
+        }
+
+        console.log("Recovering saved meeting data:", listProperties);
+
+        /*
+         * ---------------------------------------------------------
+         * 1. Convert saved JSON fields back to JavaScript objects
+         * ---------------------------------------------------------
+         */
+
+        listProperties.Absentees =
+          MainApplication.NewRequestComponent.parseSavedJSON(
+            listProperties.Absentees
+          );
+
+        listProperties.Agenda =
+          MainApplication.NewRequestComponent.parseSavedJSON(
+            listProperties.Agenda
+          );
+
+        listProperties.Discussion =
+          MainApplication.NewRequestComponent.parseSavedJSON(
+            listProperties.Discussion
+          );
+
+        listProperties.Tasks =
+          MainApplication.NewRequestComponent.parseSavedJSON(
+            listProperties.Tasks
+          );
+
+
+        /*
+         * ---------------------------------------------------------
+         * 2. Convert MeetingDate to yyyy-mm-dd
+         * ---------------------------------------------------------
+         */
+
+        if (listProperties.MeetingDate) {
+
+          var meetingDate = $spcontext.stringnifyDate({
+            value: listProperties.MeetingDate,
+            includeTime: false,
+            format: "dd/mm/yy",
+          });
+
+          listProperties.MeetingDate =
+            MainApplication.NewRequestComponent.toISODateInput(
+              meetingDate
+            );
+        }
+
+        // listProperties.Absentees = $spcontext.JSONToObject(listProperties.Absentees);
+        // listProperties.Agenda = $spcontext.JSONToObject(listProperties.Agenda);
+        // listProperties.Discussion = $spcontext.JSONToObject(listProperties.Discussion);
+
+        /*
+         * ---------------------------------------------------------
+         * 3. Store recovered request
+         * ---------------------------------------------------------
+         */
+
+        AppRequest.requestDetails = listProperties;
+
+
+        /*
+         * ---------------------------------------------------------
+         * 4. Bind normal fields
+         *
+         * This handles:
+         * MeetingDate
+         * MeetingWeek
+         * MeetingCategory
+         * AOB
+         * etc.
+         * ---------------------------------------------------------
+         */
+
+        $spcontext.htmlBind(listProperties);
+
+        /*
+         * ---------------------------------------------------------
+         * 14. Restore dynamic tables
+         *
+         * Absentees
+         * Agenda
+         * Discussion
+         * ---------------------------------------------------------
+         */
+
+        MainApplication.NewRequestComponent.hydrateMeetingTables({
+          Absentees: listProperties.Absentees,
+          Agenda: listProperties.Agenda,
+          Discussion: listProperties.Discussion,
         });
-    });
-}
+
+
+        /*
+         * ---------------------------------------------------------
+         * 5. Meeting Category
+         *
+         * renderMeetingCategory() creates the Meeting Type
+         * control dynamically based on the selected category.
+         * ---------------------------------------------------------
+         */
+
+        var savedCategory = listProperties.MeetingCategory || "";
+        var savedMeetingType = listProperties.MeetingType || "";
+
+        $("#meeting-category").val(savedCategory);
+
+        MainApplication.renderMeetingCategory();
+
+
+        /*
+         * renderMeetingCategory() has now created the correct
+         * Meeting Type control.
+         *
+         * Find it and restore the saved value.
+         */
+
+        if (savedMeetingType) {
+
+          var $meetingType = $(
+            "#meeting-type-container select, " +
+            "#meeting-type-container input"
+          ).first();
+
+          if ($meetingType.length) {
+            $meetingType.val(savedMeetingType).trigger("change");
+          }
+        }
+
+
+        /*
+         * ---------------------------------------------------------
+         * 6. Meeting duration
+         * ---------------------------------------------------------
+         */
+
+        var selectedMeetingCategory =
+          MainApplication.meetingCategory &&
+          MainApplication.meetingCategory.find(function (item) {
+            return (
+              item.Title === savedCategory ||
+              item.title === savedCategory
+            );
+          });
+
+        if (selectedMeetingCategory) {
+
+          $("#duration")
+            .text(
+              selectedMeetingCategory.Duration ||
+              selectedMeetingCategory.duration ||
+              "0"
+            );
+
+          $("#duration-container").removeClass("hide-week");
+        }
+
+
+        /*
+         * ---------------------------------------------------------
+         * 7. Meeting date / week
+         * ---------------------------------------------------------
+         */
+
+        if (listProperties.MeetingWeek) {
+          $("#week-number").text(listProperties.MeetingWeek);
+          $(".meeting-date-label .week").removeClass("hide-week");
+        } else if (listProperties.MeetingDate) {
+
+          var dateParts = listProperties.MeetingDate
+            .split("-")
+            .map(Number);
+
+          if (dateParts.length === 3) {
+
+            var recoveredDate = new Date(
+              dateParts[0],
+              dateParts[1] - 1,
+              dateParts[2]
+            );
+
+            var weekNumber =
+              MainApplication.NewRequestComponent.getWeekNumber(
+                recoveredDate
+              );
+
+            $("#week-number").text(weekNumber);
+            $(".meeting-date-label .week").removeClass("hide-week");
+          }
+        }
+
+
+        /*
+         * ---------------------------------------------------------
+         * 8. Start / End Time
+         * ---------------------------------------------------------
+         */
+
+        $("#start-time").val(listProperties.StartTime || "");
+        $("#end-time").val(listProperties.EndTime || "");
+
+        if (listProperties.StartTime) {
+          $("#end-time").attr("min", listProperties.StartTime);
+        }
+
+
+        /*
+         * ---------------------------------------------------------
+         * 9. Multiple PeoplePickers
+         *
+         * Same approach as Auditees / OtherAuditors:
+         *
+         * [
+         *   { email: "user1@company.com" },
+         *   { email: "user2@company.com" }
+         * ]
+         *
+         * becomes:
+         *
+         * [
+         *   "user1@company.com",
+         *   "user2@company.com"
+         * ]
+         * ---------------------------------------------------------
+         */
+
+        var attendeesEmails =
+          Array.isArray(listProperties.Attendees)
+            ? [
+                ...new Set(
+                  listProperties.Attendees
+                    .map(function (person) {
+                      return person && person.email;
+                    })
+                    .filter(Boolean)
+                ),
+              ]
+            : [];
+
+        var timeOffEmails =
+          Array.isArray(listProperties.TimeOff)
+            ? [
+                ...new Set(
+                  listProperties.TimeOff
+                    .map(function (person) {
+                      return person && person.email;
+                    })
+                    .filter(Boolean)
+                ),
+              ]
+            : [];
+
+        var presenterEmails =
+          Array.isArray(listProperties.Presenter)
+            ? [
+                ...new Set(
+                  listProperties.Presenter
+                    .map(function (person) {
+                      return person && person.email;
+                    })
+                    .filter(Boolean)
+                ),
+              ]
+            : [];
+
+        var engagementParticipantEmails =
+          Array.isArray(listProperties.EngagementParticipant)
+            ? [
+                ...new Set(
+                  listProperties.EngagementParticipant
+                    .map(function (person) {
+                      return person && person.email;
+                    })
+                    .filter(Boolean)
+                ),
+              ]
+            : [];
+
+
+        /*
+         * ---------------------------------------------------------
+         * 10. Single PeoplePickers
+         * ---------------------------------------------------------
+         */
+
+        var timeKeeperEmail =
+          listProperties.TimeKeeper &&
+          (
+            listProperties.TimeKeeper.email ||
+            listProperties.TimeKeeper.value
+          ) || "";
+
+
+        /*
+         * ---------------------------------------------------------
+         * 11. Initialize PeoplePickers first
+         * ---------------------------------------------------------
+         */
+
+        PeoplePicker.initializePeoplePickers(
+          MainApplication.staffList
+        );
+
+
+        /*
+         * ---------------------------------------------------------
+         * 12. Restore multiple PeoplePickers
+         * ---------------------------------------------------------
+         */
+
+        PeoplePicker.setDefault(
+          "Attendees",
+          attendeesEmails
+        );
+
+        PeoplePicker.setDefault(
+          "TimeOff",
+          timeOffEmails
+        );
+
+        PeoplePicker.setDefault(
+          "Presenter",
+          presenterEmails
+        );
+
+        PeoplePicker.setDefault(
+          "EngagementParticipant",
+          engagementParticipantEmails
+        );
+
+
+        /*
+         * ---------------------------------------------------------
+         * 13. Restore single PeoplePickers
+         * ---------------------------------------------------------
+         */
+
+        PeoplePicker.setDefault(
+          "TimeKeeper",
+          timeKeeperEmail
+        );
+
+
+        /*
+         * ---------------------------------------------------------
+         * 15. Restore Task Items
+         * ---------------------------------------------------------
+         */
+
+        AppRequest.actionItems = Array.isArray(listProperties.Tasks)
+          ? listProperties.Tasks
+          : [];
+
+        MainApplication.NewRequestComponent.editingActionIndex = null;
+
+        MainApplication.NewRequestComponent.renderActionItems();
+
+
+        /*
+         * ---------------------------------------------------------
+         * 16. Re-apply validation
+         * ---------------------------------------------------------
+         */
+
+        $spcontext.applyValidationEvents();
+
+
+        /*
+         * ---------------------------------------------------------
+         * 17. Show the recovered form
+         * ---------------------------------------------------------
+         */
+
+        $("#newrequest-page").removeClass("hidden");
+        $("#newLoader").hide();
+
+        globalDefinitions.closeLoader();
+
+        console.log(
+          "Meeting draft recovered successfully:",
+          AppRequest.requestDetails
+        );
+      }
+    );
+
+  } else {
+
+    globalDefinitions.closeLoader();
+
+    MainApplication.notyf.error("Invalid Request...");
+    $spcontext.redirect("#/", false);
+  }
+};
+
+MainApplication.NewRequestComponent.parseSavedJSON = function (value) {
+  if (!value) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === "object") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value) || [];
+    } catch (error) {
+      console.warn("Unable to parse saved JSON:", value, error);
+      return [];
+    }
+  }
+
+  return [];
+};
+
+MainApplication.NewRequestComponent.hydrateMeetingTables = function (savedData) {
+  /*
+   * ---------------------------------------------------------
+   * ABSENTEES
+   * ---------------------------------------------------------
+   */
+
+  var absenteeRows = Array.isArray(savedData.Absentees)
+    ? savedData.Absentees
+    : [];
+
+  if (absenteeRows.length > 0) {
+
+    var absenteeCtx = AppRequest.absenteeCTX;
+    var absenteeRoot = "absentees-container";
+
+    var absenteeSettings =
+      absenteeCtx &&
+      absenteeCtx.dynamicTableSettings &&
+      absenteeCtx.dynamicTableSettings.Absentees;
+
+    if (absenteeSettings) {
+
+      /*
+       * Remove the blank row created by prepareAllTables()
+       */
+
+      while ($("#" + absenteeRoot).children("tr").length > 0) {
+        MainApplication.deleteTableRow(
+          absenteeCtx,
+          0,
+          "Absentees"
+        );
+      }
+
+
+      /*
+       * Recreate every saved absentee row
+       */
+
+      absenteeRows.forEach(function (rowData) {
+
+        absenteeSettings.addRow();
+
+        var $row = $("#" + absenteeRoot)
+          .children("tr")
+          .last();
+
+        /*
+         * The first column is the staff selector.
+         */
+
+        var $person = $row
+          .find('[speed-table-include]')
+          .eq(0);
+
+        /*
+         * Populate the selector using staffList.
+         */
+
+        if ($person.length) {
+
+          $person.empty();
+
+          $person.append(
+            '<option value="">Select person</option>'
+          );
+
+          (MainApplication.staffList || []).forEach(
+            function (staff) {
+
+              var name = staff.Title || "";
+              var email = staff.Email || "";
+
+              if (!name || !email) {
+                return;
+              }
+
+              var selected =
+                email.toLowerCase() ===
+                String(rowData.person || "").toLowerCase()
+                  ? "selected"
+                  : "";
+
+              $person.append(
+                $("<option>", {
+                  value: email,
+                  text: name,
+                  selected: selected === "selected",
+                })
+              );
+            }
+          );
+
+          /*
+           * In case the saved value is already the person's
+           * name rather than email, try matching the name too.
+           */
+
+          if (!$person.val() && rowData.person) {
+
+            var matchingStaff =
+              (MainApplication.staffList || []).find(
+                function (staff) {
+
+                  return (
+                    String(staff.Title || "").toLowerCase() ===
+                    String(rowData.person || "").toLowerCase()
+                  );
+                }
+              );
+
+            if (matchingStaff) {
+              $person.val(matchingStaff.Email);
+            }
+          }
+
+          $person.trigger("change");
+        }
+
+
+        /*
+         * Second column = Reason
+         */
+
+        var $reason = $row
+          .find('[speed-table-include]')
+          .eq(1);
+
+        if ($reason.length) {
+          $reason.val(rowData.reason || "");
+        }
+      });
+    }
+  }
+
+
+  /*
+   * ---------------------------------------------------------
+   * AGENDA
+   * ---------------------------------------------------------
+   */
+
+  var agendaRows = Array.isArray(savedData.Agenda)
+    ? savedData.Agenda
+    : [];
+
+  if (agendaRows.length > 0) {
+
+    var agendaCtx = AppRequest.agendaCTX;
+    var agendaRoot = "agenda-container";
+
+    var agendaSettings =
+      agendaCtx &&
+      agendaCtx.dynamicTableSettings &&
+      agendaCtx.dynamicTableSettings.Agenda;
+
+    if (agendaSettings) {
+
+      while ($("#" + agendaRoot).children("tr").length > 0) {
+        MainApplication.deleteTableRow(
+          agendaCtx,
+          0,
+          "Agenda"
+        );
+      }
+
+      agendaRows.forEach(function (rowData) {
+
+        agendaSettings.addRow();
+
+        var $row = $("#" + agendaRoot)
+          .children("tr")
+          .last();
+
+        var $agenda = $row
+          .find('[speed-table-include]')
+          .eq(0);
+
+        if ($agenda.length) {
+          $agenda.val(rowData.agenda || "");
+        }
+      });
+    }
+  }
+
+
+  /*
+   * ---------------------------------------------------------
+   * DISCUSSION
+   * ---------------------------------------------------------
+   */
+
+  var discussionRows = Array.isArray(savedData.Discussion)
+    ? savedData.Discussion
+    : [];
+
+  if (discussionRows.length > 0) {
+
+    var discussionCtx = AppRequest.discussionCTX;
+    var discussionRoot = "discussion-container";
+
+    var discussionSettings =
+      discussionCtx &&
+      discussionCtx.dynamicTableSettings &&
+      discussionCtx.dynamicTableSettings.Discussion;
+
+    if (discussionSettings) {
+
+      while (
+        $("#" + discussionRoot).children("tr").length > 0
+      ) {
+        MainApplication.deleteTableRow(
+          discussionCtx,
+          0,
+          "Discussion"
+        );
+      }
+
+      discussionRows.forEach(function (rowData) {
+
+        discussionSettings.addRow();
+
+        var $row = $("#" + discussionRoot)
+          .children("tr")
+          .last();
+
+        var $discussion = $row
+          .find('[speed-table-include]')
+          .eq(0);
+
+        if ($discussion.length) {
+          $discussion.val(rowData.discussion || "");
+        }
+      });
+    }
+  }
+
+
+  /*
+   * Rebind delete buttons and validation after
+   * dynamically creating the rows.
+   */
+
+  MainApplication.bindDeleteEvents();
+  $spcontext.applyValidationEvents();
+};
