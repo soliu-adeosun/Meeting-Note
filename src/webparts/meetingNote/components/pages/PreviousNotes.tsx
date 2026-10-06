@@ -9,71 +9,84 @@ require("previousnotes");
 export default class PreviousNotes extends React.Component<{}, {}> {
   public render(): React.ReactElement {
     return (
-        <>
-            <NewLoader />
-            <div className="hidden" id="previousnotes-page">
-                <div className="AdrPage">
-                    <section className="AdrHero">
-                        <div>
-                            <h2>Application Development Requests</h2>
-                        </div>
-                        {/* <button className="AdrPrimaryButton" type="button">+ New Request</button> */}
-                    </section>
+      <>
+        <NewLoader />
+        <div className="hidden" id="previousnotes-page">
+          <div className="AdrPage">
 
-                    <section className="AdrStatsGrid">
-                        <article>
-                            <span>Total Requests</span>
-                            <strong id="totalRequest"></strong>
-                            <p>All submitted requests</p>
-                        </article>
-                        <article>
-                            <span>Pending Approval</span>
-                            <strong id="pendingRequest"></strong>
-                            <p>Awaiting approvals</p>
-                        </article>
-                        <article>
-                            <span>Closed</span>
-                            <strong id="completedRequest"></strong>
-                            <p>Fully signed off / Closed</p>
-                        </article>
-                    </section>
-
-                    <section className="AdrPanel">
-                        <div className="AdrPanelHeader">
-                            <div>
-                                <h3>Recent Requests</h3>
-                                <p>Most recently submitted requests across all divisions</p>
-                            </div>
-                        </div>
-                        <div id='dashboard-tabs' />
-                        <div className="table-wrap">
-                            <div className="norequest hidden text-center py-6 text-gray-500 text-sm sm:text-base">
-                                No entries at the moment...
-                            </div>
-                            <div className="AdrTableShell hidden" id="tasktable">
-                                <table className="AdrTable">
-                                    <thead>
-                                        <tr>
-                                            <th>S/N</th>
-                                            <th speed-table-data="WorkflowRequestID">Request ID</th>
-                                            <th speed-table-data="ProcessName">Process Name</th>
-                                            <th speed-table-data="Title">Requestor</th>
-                                            <th speed-table-data="Division">Division</th>
-                                            <th speed-table-data="RequestCreated">Date</th>
-                                            <th speed-table-data="Approval_Status">Status</th>
-                                            <th speed-table-data="Modified">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="speed-data-table">
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div id="myrequestpagination" className="pagination" />
-                        </div>
-                    </section>
+            <section className="AdrPanel">
+              <div
+                className="AdrReportControls filter-container"
+                role="tabpanel"
+              >
+                <div className="AdrFormGrid left-filter-grid three-column">
+                  <label className="AdrField">
+                    <span>Meeting Category</span>
+                    <select
+                      id="status-filter"
+                      speed-bind-query="MeetingCategory"
+                      speed-operator="Eq"
+                    >
+                      <option value="">All</option>
+                      <option value="Divison/Unit Meeting">
+                        Divison/Unit Meeting
+                      </option>
+                      <option value="Organizational Meeting">
+                        Organizational Meeting
+                      </option>
+                      <option value="Strategy Meeting">Strategy Meeting</option>
+                      <option value="Committee Meeting">
+                        Committee Meeting
+                      </option>
+                      <option value="Adhoc Meeting">Adhoc Meeting</option>
+                    </select>
+                  </label>
+                  <label className="AdrField">
+                    <span>Meeting Type</span>
+                    <select
+                      id="status-filter-type"
+                      speed-bind-query="MeetingType"
+                      speed-operator="Eq"
+                    ></select>
+                  </label>
+                  <label className="AdrField">
+                    <span>Search Note</span>
+                    <input
+                      placeholder="Search by Reference ID/Meeting Type"
+                      id="searchInput"
+                    />
+                  </label>
                 </div>
-            </div>
-        </>
+                {/* <button className="AdrPrimaryButton" type="button" id="exportToExcel"><span>⇩</span> Export to Excel</button> */}
+              </div>
+
+              <div className="table-wrap">
+                <div className="norequest hidden text-center py-6 text-gray-500 text-sm sm:text-base">
+                  No entries at the moment...
+                </div>
+                <div className="AdrTableShell hidden" id="tasktable">
+                  <table className="AdrTable">
+                    <thead>
+                      <tr>
+                        <th>S/N</th>
+                        <th speed-table-data="ReferenceID">Meeting ID</th>
+                        <th speed-table-data="MeetingCategory">
+                          Meeting Category
+                        </th>
+                        <th speed-table-data="MeetingType">Meeting Type</th>
+                        <th speed-table-data="MeetingDate">Meeting Date</th>
+                        <th speed-table-data="Status">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="speed-data-table"></tbody>
+                  </table>
+                </div>
+                <div id="myrequestpagination" className="pagination" />
+              </div>
+            </section>
+          </div>
+        </div>
+      </>
     );
   }
 

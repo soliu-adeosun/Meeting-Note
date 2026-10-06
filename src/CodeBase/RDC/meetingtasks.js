@@ -35,7 +35,7 @@ whenMeetingTasksDependeciesLoaded = function () {
   speedctxRoot.DataForTable.propertiesHandler = {
     Task: function (valueToEva) {
       var viewStr = `
-                <a href="#/viewtask?itemId=${valueToEva.ReferenceID}">
+                <a class="brown-anchor" href="#/viewtask?itemId=${valueToEva.ReferenceID}">
                     ${valueToEva.Task}
                 </a>`;
 
@@ -114,7 +114,7 @@ MainApplication.MeetingTasksComponent.retrieveRequest = function () {
   };
 
   speedctxRoot.getListToItems(
-    "MeetingNoteTasks",
+    configProperties.TASKLIST.setting,
     query,
     extraProperties,
     true,
@@ -161,7 +161,7 @@ MainApplication.MeetingTasksComponent.showTableData = function (tableData) {
 
 MainApplication.MeetingTasksComponent.exportToExcel = function () {
   var excelName =
-    "MeetingNoteTasks" + $spcontext.stringnifyDate() + ".csv";
+    configProperties.TASKLIST.setting + $spcontext.stringnifyDate() + ".csv";
   var dataStringHeader = [
     "Description",
     "Task Category",

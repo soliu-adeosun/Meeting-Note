@@ -168,6 +168,7 @@ function whenLayoutLoaded() {
       CurrentUserProperties.email = CurrentUserProperties.email.toLowerCase();
       CurrentUserProperties.login = CurrentUserProperties.email;
       CurrentUserProperties.title = user.get_title();
+      CurrentUserProperties.id = user.get_id();
 
       var nameParts = $.trim(CurrentUserProperties.title).split(/\s+/);
       var initials = "";
@@ -569,7 +570,11 @@ MainApplication.reportSyncSearch = function (keyquery, data) {
       item.EmployeeEmail?.toLowerCase().includes(keyquery) ||
       item.Approval_Status?.toLowerCase().includes(keyquery) ||
       item.Current_Approver?.toLowerCase().includes(keyquery) ||
-      item.Task?.toLowerCase().includes(keyquery),
+      item.Task?.toLowerCase().includes(keyquery) || 
+      item.ReferenceID?.toLowerCase().includes(keyquery) ||
+      item.MeetingType?.toLowerCase().includes(keyquery) ||
+      item.MeetingCategory?.toLowerCase().includes(keyquery) ||
+      item.Status?.toLowerCase().includes(keyquery),
   );
 };
 

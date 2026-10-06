@@ -91,6 +91,9 @@
 .AdrRadioRow { display: flex; flex-wrap: wrap; gap: 14px; padding: 4px 0; }
 .AdrRadioRow label { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--adr-ink); }
 
+.three-column {
+  grid-template-columns: repeat(3, minmax(0,1fr));
+}
 /* ---- Tables ---- */
 .AdrTableShell {
   padding: 22px 24px;
@@ -218,7 +221,7 @@
 
 .AdrSidebarOverlay { display: none; }
 .left-filter-grid {
-    width: 80%;
+    width: 100%;
   }
 
 .AdrReportControls {
@@ -414,4 +417,9 @@
 
 .center-text {
   text-align: center;
+}
+
+.brown-anchor {
+  color: var(--adr-accent);
+  font-weight: 600;
 }
