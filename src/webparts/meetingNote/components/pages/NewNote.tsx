@@ -213,62 +213,77 @@ export default class NewNote extends React.Component<{}, {}> {
                     </table>
                   </div>
                 </section>
-                {/* Task items */}
-                
+                {/* Action items – list + modal form */}
                 <section className="card actions-block">
                   <div className="card-head">
-                    Task Items
+                    Action Items
                     <button
                       type="button"
-                      id="add-task-btn"
+                      id="open-action-modal-btn"
                       className="icon-btn"
-                      title="Add Task"
+                      title="Add action item"
                       style={{ width: 22, height: 22, fontSize: 13 }}
                     >
                       +
                     </button>
                   </div>
-
                   <div className="card-body" style={{ padding: 0 }}>
-                    <table className="actions-table">
-                      <thead>
-                        <tr>
-                          <th>Subdivision / Person</th>
-                          <th>Task</th>
-                          <th>Due Date</th>
-                          <th>Action Plan</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>
-                            <select id="action-type" className="form-select">
-                              <option value="">Select...</option>
-                              <option value="Division">Division</option>
-                              <option value="Person">Person</option>
-                            </select>
-
-                            <div id="action-assignee-container" style={{ marginTop: 6 }} />
-                          </td>
-
-                          <td>
-                            <textarea id="action-task" placeholder="Task" />
-                          </td>
-
-                          <td>
-                            <input type="date" id="action-due-date" />
-                          </td>
-
-                          <td>
-                            <textarea id="action-plan" placeholder="Action plan" />
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-
-                    <div className="actions-blank" />
+                    <div className="actions-blank" id="actions-list" />
                   </div>
                 </section>
+
+                {/* Action item modal */}
+                <div id="action-item-modal" className="ai-modal hidden" aria-hidden="true">
+                  <div className="ai-modal-backdrop" id="action-modal-backdrop" />
+                  <div className="ai-modal-panel" role="dialog" aria-labelledby="action-modal-title">
+                    <div className="ai-modal-head">
+                      <h3 id="action-modal-title">Add Action Item</h3>
+                      <button type="button" className="ai-modal-close" id="close-action-modal" title="Close">
+                        ×
+                      </button>
+                    </div>
+                    <div className="ai-modal-body">
+                      <div className="ai-form-grid">
+                        <label className="ai-field">
+                          <span>Assign to</span>
+                          <select id="action-type" className="form-select">
+                            <option value="">Select type…</option>
+                            <option value="Division">Division</option>
+                            <option value="Person">Person</option>
+                          </select>
+                        </label>
+                        <label className="ai-field">
+                          <span>Assignee</span>
+                          <div id="action-assignee-container">
+                            <select id="action-assignee" className="form-select" disabled>
+                              <option value="">Select type first…</option>
+                            </select>
+                          </div>
+                        </label>
+                        <label className="ai-field ai-field-full">
+                          <span>Task</span>
+                          <textarea id="action-task" rows={3} placeholder="What needs to be done?" />
+                        </label>
+                        <label className="ai-field">
+                          <span>Due date</span>
+                          <input type="date" id="action-due-date" />
+                        </label>
+                        <label className="ai-field ai-field-full">
+                          <span>Action plan <em>(optional)</em></span>
+                          <textarea id="action-plan" rows={2} placeholder="How will this be done?" />
+                        </label>
+                      </div>
+                    </div>
+                    <div className="ai-modal-foot">
+                      <button type="button" className="ai-btn ai-btn-ghost" id="cancel-action-modal">
+                        Cancel
+                      </button>
+                      <button type="button" className="ai-btn ai-btn-primary" id="add-task-btn">
+                        Add item
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
                 {/* AOB */}
                 <section className="card aob-block">

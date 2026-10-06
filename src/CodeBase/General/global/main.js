@@ -928,4 +928,50 @@ MainApplication.deleteTableRow = function (ctx, pos, tableName) {
     ctx.dynamicTableSettings[tableName].deleteRow(pos);
 };
 
+
+MainApplication.rememberRoute = function () {
+  try {
+    var hash = window.location.hash || "#/";
+    var prev = sessionStorage.getItem("mn_current_route");
+    // Only remember a new "previous" when leaving a non-view page,
+    // or when moving between different app routes.
+    if (prev && prev !== hash) {
+      sessionStorage.setItem("mn_previous_route", prev);
+    }
+    sessionStorage.setItem("mn_current_route", hash);
+  } catch (e) {}
+};
+
+MainApplication.goBack = function (fallback) {
+  fallback = fallback || "#/mynotes";
+
+  var previous = null;
+  try {
+    previous = sessionStorage.getItem("mn_previous_route");
+  } catch (e) {}
+
+  // Prefer the route we recorded just before landing on this page
+  if (previous && previous !== window.location.hash) {
+    window.location.hash = previous.indexOf("#") === 0 ? previous : "#" + previous;
+    return;
+  }
+
+  // Real browser history (works for in-app HashRouter navigations)
+  if (window.history.length > 1) {
+    window.history.back();
+    return;
+  }
+
+  window.location.hash = fallback.indexOf("#") === 0 ? fallback : "#" + fallback;
+};
+
+// Keep route memory updated for the whole SPA
+if (!window.__mnRouteMemoryBound) {
+  window.__mnRouteMemoryBound = true;
+  MainApplication.rememberRoute();
+  window.addEventListener("hashchange", function () {
+    MainApplication.rememberRoute();
+  });
+}
+
 whenLayoutLoaded();

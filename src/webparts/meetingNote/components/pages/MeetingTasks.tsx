@@ -44,7 +44,7 @@ export default class MeetingTasks extends React.Component<{}, {}> {
                     <input placeholder="Search task"  id="searchInput"/>
                   </label>
                 </div>
-                <button className="AdrPrimaryButton" type="button" id="exportToExcel"><span>⇩</span> Export to Excel</button>
+                {/* <button className="AdrPrimaryButton" type="button" id="exportToExcel"><span>⇩</span> Export to Excel</button> */}
 
               </div>
 

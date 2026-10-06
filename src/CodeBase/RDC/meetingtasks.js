@@ -35,7 +35,7 @@ whenMeetingTasksDependeciesLoaded = function () {
   speedctxRoot.DataForTable.propertiesHandler = {
     Task: function (valueToEva) {
       var viewStr = `
-                <a class="brown-anchor" href="#/viewtask?itemId=${valueToEva.ReferenceID}">
+                <a class="brown-anchor" href="#/viewtask?itemId=${valueToEva.ID}">
                     ${valueToEva.Task}
                 </a>`;
 

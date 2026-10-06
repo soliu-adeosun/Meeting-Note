@@ -74,145 +74,117 @@ function whenNewNoteDependeciesLoaded() {
 
   MainApplication.NewNoteComponent.editingActionIndex = null;
 
-  $(document).on("change", "#start-time", function () {
-    const startTime = $(this).val();
-    const $endTime = $("#end-time");
+  // Namespaced handlers — .off() first so revisiting New Note does not
+  // stack duplicate listeners (which caused the false "Please select
+  // Division or Person" toast after the form was cleared by the first handler).
+  $(document)
+    .off("change.nnStartTime", "#start-time")
+    .on("change.nnStartTime", "#start-time", function () {
+      const startTime = $(this).val();
+      const $endTime = $("#end-time");
+      $endTime.attr("min", startTime);
+      if ($endTime.val() && $endTime.val() < startTime) {
+        $endTime.val("");
+      }
+    });
 
-    $endTime.attr("min", startTime);
+  $(document)
+    .off("change.nnActionType", "#action-type")
+    .on("change.nnActionType", "#action-type", function () {
+      MainApplication.NewNoteComponent.bindActionAssignee($(this).val());
+    });
 
-    // Clear End Time if it is earlier than Start Time
-    if ($endTime.val() && $endTime.val() < startTime) {
-      $endTime.val("");
-    }
-  });
-  // Handle switching between Division and Person
-$(document).on("change", "#action-type", function () {
-  MainApplication.NewNoteComponent.bindActionAssignee($(this).val());
-});
+  $(document)
+    .off("click.nnOpenActionModal", "#open-action-modal-btn")
+    .on("click.nnOpenActionModal", "#open-action-modal-btn", function () {
+      MainApplication.NewNoteComponent.openActionModal();
+    });
 
-// Add the current action item to the output table
+  $(document)
+    .off(
+      "click.nnCloseActionModal",
+      "#close-action-modal, #cancel-action-modal, #action-modal-backdrop"
+    )
+    .on(
+      "click.nnCloseActionModal",
+      "#close-action-modal, #cancel-action-modal, #action-modal-backdrop",
+      function () {
+        MainApplication.NewNoteComponent.closeActionModal();
+      }
+    );
 
-$(document).on("click", "#add-task-btn", function () {
-  const type = $("#action-type").val();
-  const $assignee = $("#action-assignee");
-  const selectedOption = $assignee.find("option:selected");
+  $(document)
+    .off("click.nnSaveAction", "#add-task-btn")
+    .on("click.nnSaveAction", "#add-task-btn", function (e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
 
-  const task = $("#action-task").val().trim();
-  const dueDate = $("#action-due-date").val();
-  const actionPlan = $("#action-plan").val().trim();
+      const type = $("#action-type").val();
+      const $assignee = $("#action-assignee");
+      const selectedOption = $assignee.find("option:selected");
 
-  const component = MainApplication.NewNoteComponent;
-  const editingIndex = component.editingActionIndex;
+      const task = ($("#action-task").val() || "").trim();
+      const dueDate = $("#action-due-date").val();
+      const actionPlan = ($("#action-plan").val() || "").trim();
 
-  if (!type) {
-    globalDefinitions.HandlerError("Please select Division or Person.");
-    return;
-  }
+      const component = MainApplication.NewNoteComponent;
+      const editingIndex = component.editingActionIndex;
 
-  if (!$assignee.val()) {
-    globalDefinitions.HandlerError("Please select a division or staff member.");
-    return;
-  }
+      if (!type) {
+        globalDefinitions.HandlerError("Please select Division or Person.");
+        return;
+      }
 
-  if (!task) {
-    globalDefinitions.HandlerError("Please fill the Task space.");
-    return;
-  }
+      if (!$assignee.length || !$assignee.val()) {
+        globalDefinitions.HandlerError(
+          "Please select a division or staff member."
+        );
+        return;
+      }
 
-  const isPerson = type === "Person";
+      if (!task) {
+        globalDefinitions.HandlerError("Please fill the Task space.");
+        return;
+      }
 
-  const actionItem = {
-    Type: type,
-    Name: isPerson
-      ? selectedOption.data("name")
-      : selectedOption.val(),
-    Email: isPerson
-      ? selectedOption.data("email")
-      : "",
-    Task: task,
-    DueDate: dueDate,
-    ActionPlan: actionPlan
-  };
+      const isPerson = type === "Person";
 
-  if (editingIndex !== null) {
-    // Update existing item
-    AppRequest.actionItems[editingIndex] = actionItem;
-  } else {
-    // Add new item
-    AppRequest.actionItems.push(actionItem);
-  }
+      const actionItem = {
+        Type: type,
+        Name: isPerson ? selectedOption.data("name") : selectedOption.val(),
+        Email: isPerson ? selectedOption.data("email") : "",
+        Task: task,
+        DueDate: dueDate,
+        ActionPlan: actionPlan,
+      };
 
-  component.renderActionItems();
-  component.resetActionForm();
-});
+      if (editingIndex !== null && editingIndex >= 0) {
+        AppRequest.actionItems[editingIndex] = actionItem;
+      } else {
+        AppRequest.actionItems.push(actionItem);
+      }
 
-$(document).on("click", ".edit-action-btn", function () {
-  const component = MainApplication.NewNoteComponent;
-  const index = Number($(this).attr("data-index"));
-  const item = AppRequest.actionItems[index];
+      component.renderActionItems();
+      component.closeActionModal();
+    });
 
-  if (!item) return;
+  $(document)
+    .off("click.nnEditAction", ".edit-action-btn")
+    .on("click.nnEditAction", ".edit-action-btn", function () {
+      const index = Number($(this).data("index"));
+      const item = AppRequest.actionItems[index];
+      if (!item) return;
+      MainApplication.NewNoteComponent.openActionModal(index);
+    });
 
-  component.editingActionIndex = index;
-
-  $("#action-type").val(item.Type);
-
-  // Rebuild the appropriate Division or Person dropdown
-  component.bindActionAssignee(item.Type);
-
-  // Restore the selected assignee
-  $("#action-assignee")
-    .val(item.Type === "Person" ? item.Email : item.Name)
-    .trigger("change");
-
-  $("#action-task").val(item.Task);
-  $("#action-due-date").val(item.DueDate);
-  $("#action-plan").val(item.ActionPlan);
-
-  // Change the Add button into an Update button
-  $("#add-task-btn").text("Update").attr("title", "Update Action").removeClass("icon-btn").addClass("update-task-btn");
-
-  // Add a cancel button only once
-  if (!$("#cancel-action-edit").length) {
-    $("#add-task-btn").after(`
-      <button
-        type="button"
-        id="cancel-action-edit"
-        class="icon-btn"
-        title="Cancel Edit"
-      >×</button>
-    `);
-  }
-});
-
-// Delete an action item
-$(document).on("click", ".delete-action-btn", function () {
-  const component = MainApplication.NewNoteComponent;
-  const index = Number($(this).attr("data-index"));
-
-  if (index < 0 || index >= AppRequest.actionItems.length) return;
-
-  AppRequest.actionItems.splice(index, 1);
-
-  // Reset the form if the item being edited was deleted
-  if (component.editingActionIndex === index) {
-    component.resetActionForm();
-  } else if (
-    component.editingActionIndex !== null &&
-    component.editingActionIndex > index
-  ) {
-    // Adjust the edit index after removing an earlier item
-    component.editingActionIndex--;
-  }
-
-  component.renderActionItems();
-});
-
-// Cancel editing
-$(document).on("click", "#cancel-action-edit", function () {
-  MainApplication.NewNoteComponent.resetActionForm();
-});
-
+  $(document)
+    .off("click.nnDeleteAction", ".delete-action-btn")
+    .on("click.nnDeleteAction", ".delete-action-btn", function () {
+      const index = Number($(this).data("index"));
+      if (index < 0 || index >= AppRequest.actionItems.length) return;
+      AppRequest.actionItems.splice(index, 1);
+      MainApplication.NewNoteComponent.renderActionItems();
+    });
 
   $spcontext.applyValidationEvents();
 
@@ -696,77 +668,108 @@ MainApplication.NewNoteComponent.bindActionAssignee = function (type) {
 // Render the collected action items into the output table
 
 
+MainApplication.NewNoteComponent.openActionModal = function (editIndex) {
+  const component = MainApplication.NewNoteComponent;
+  component.editingActionIndex =
+    typeof editIndex === "number" ? editIndex : null;
+
+  const isEdit = component.editingActionIndex !== null;
+  $("#action-modal-title").text(isEdit ? "Edit Action Item" : "Add Action Item");
+  $("#add-task-btn").text(isEdit ? "Update item" : "Add item");
+
+  component.resetActionFormFields();
+
+  if (isEdit) {
+    const item = AppRequest.actionItems[component.editingActionIndex];
+    if (item) {
+      $("#action-type").val(item.Type);
+      component.bindActionAssignee(item.Type);
+      setTimeout(function () {
+        if (item.Type === "Person") {
+          $("#action-assignee").val(item.Email);
+        } else {
+          $("#action-assignee").val(item.Name);
+        }
+      }, 0);
+      $("#action-task").val(item.Task || "");
+      $("#action-due-date").val(item.DueDate || "");
+      $("#action-plan").val(item.ActionPlan || "");
+    }
+  }
+
+  $("#action-item-modal").removeClass("hidden").attr("aria-hidden", "false");
+};
+
+MainApplication.NewNoteComponent.closeActionModal = function () {
+  MainApplication.NewNoteComponent.editingActionIndex = null;
+  MainApplication.NewNoteComponent.resetActionFormFields();
+  $("#action-item-modal").addClass("hidden").attr("aria-hidden", "true");
+};
+
+MainApplication.NewNoteComponent.resetActionFormFields = function () {
+  $("#action-type").val("");
+  $("#action-assignee-container").html(
+    '<select id="action-assignee" class="form-select" disabled><option value="">Select type first…</option></select>'
+  );
+  $("#action-task").val("");
+  $("#action-due-date").val("");
+  $("#action-plan").val("");
+};
+
+// Back-compat alias used elsewhere
+MainApplication.NewNoteComponent.resetActionForm =
+  MainApplication.NewNoteComponent.closeActionModal;
+
 MainApplication.NewNoteComponent.renderActionItems = function () {
   const $container = $(".actions-blank");
   const component = MainApplication.NewNoteComponent;
+  const items = AppRequest.actionItems || [];
 
-  if (!AppRequest.actionItems || !AppRequest.actionItems.length) {
-    $container.empty();
+  if (!items.length) {
+    $container.html(
+      '<div class="ai-empty">No action items yet. Click <strong>+</strong> to add one.</div>'
+    );
     return;
   }
 
   let rows = "";
-
-  AppRequest.actionItems.forEach(function (item, index) {
+  items.forEach(function (item, index) {
     rows += `
       <tr>
-        <td>${component.escapeHtml(item.Name)}</td>
-        <td>${component.escapeHtml(item.Email || "—")}</td>
+        <td>
+          <div class="ai-assignee-cell">
+            <strong>${component.escapeHtml(item.Name)}</strong>
+            <small>${component.escapeHtml(item.Type || "")}${
+              item.Email
+                ? " · " + component.escapeHtml(item.Email)
+                : ""
+            }</small>
+          </div>
+        </td>
         <td>${component.escapeHtml(item.Task)}</td>
         <td>${component.escapeHtml(item.DueDate || "—")}</td>
         <td>${component.escapeHtml(item.ActionPlan || "—")}</td>
-        <td>
-          <button
-            type="button"
-            class="edit-action-btn"
-            data-index="${index}"
-            title="Edit"
-          >Edit</button>
-
-          <button
-            type="button"
-            class="delete-action-btn"
-            data-index="${index}"
-            title="Delete"
-          >Delete</button>
+        <td class="ai-row-actions">
+          <button type="button" class="edit-action-btn" data-index="${index}" title="Edit">Edit</button>
+          <button type="button" class="delete-action-btn" data-index="${index}" title="Delete">Delete</button>
         </td>
-      </tr>
-    `;
+      </tr>`;
   });
 
   $container.html(`
-    <table class="actions-table">
+    <table class="actions-table ai-list-table">
       <thead>
         <tr>
-          <th>Division/Name</th>
-          <th>Email</th>
+          <th>Assignee</th>
           <th>Task</th>
           <th>Due Date</th>
           <th>Action Plan</th>
-          <th>Actions</th>
+          <th></th>
         </tr>
       </thead>
-      <tbody>
-        ${rows}
-      </tbody>
+      <tbody>${rows}</tbody>
     </table>
   `);
-};
-
-MainApplication.NewNoteComponent.resetActionForm = function () {
-  const component = MainApplication.NewNoteComponent;
-
-  component.editingActionIndex = null;
-
-  $("#action-type").val("");
-  $("#action-assignee-container").empty();
-  $("#action-task").val("");
-  $("#action-due-date").val("");
-  $("#action-plan").val("");
-
-  $("#add-task-btn").text("+").attr("title", "Add Task").removeClass("update-task-btn").addClass("icon-btn");
-
-  $("#cancel-action-edit").remove();
 };
 
 MainApplication.NewNoteComponent.createMeetingTasks = function (
@@ -788,7 +791,7 @@ MainApplication.NewNoteComponent.createMeetingTasks = function (
       Email: item.Email || "",
       Task: item.Task,
       DueDate: item.DueDate,
-      ActionPlan: item.ActionPlans || "",
+      ActionPlan: item.ActionPlan || "",
       Status: "Not Started",
     };
   });

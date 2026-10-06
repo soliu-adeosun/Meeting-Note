@@ -1,475 +1,209 @@
-loadViewTask = function () {
+loadViewTaskComponent = function () {
   if (MainApplication.cachedState.mode) {
-    // whenViewTaskDependeciesLoaded();
-    viewTask();
+    whenViewTaskDependeciesLoaded();
   } else {
-    MainApplication.cachedState.pageStateCall = loadViewTask;
+    setTimeout(function () {
+      MainApplication.cachedState.pageStateCall = loadViewTaskComponent;
+    }, 1000);
   }
 };
 
-var AppRequest;
-
-var customWorkflowEngine;
-
-MainApplication.ViewTask.ApplicationDetails = function () {
-  this.url = window.location.href;
+MainApplication.ViewTaskComponent.ApplicationDetails = function () {
   this.itemId = null;
-  this.mode = null;
-  this.requestDetails = {};
-  this.Attachments = [];
-  this.FileUrls = {};
-  this.FolderUrl = "";
-  this.AttachmentLoader = {};
-  this.messageTemplate = {};
-  this.feedback = false;
-  this.approverComments = "";
-  this.transactionHistory = [];
-  this.defaultStage = "AA0";
-  this.returned = null;
-  this.sectionArr = [];
-  this.sections = {};
-  this.finalrating = [];
-  this.questionSetCounter = 0;
-  this.groupProperties = {};
-  this.nonConformanceCounter = 1;
+  this.taskDetails = {};
 };
 
-viewTask = function () {
-  console.log("ViewTask component loaded");
-  $("#newLoader").hide();
-  $("#viewtask-page").removeClass("hidden");
-  globalDefinitions.closeLoader();
+function whenViewTaskDependeciesLoaded() {
+  AppRequest = new MainApplication.ViewTaskComponent.ApplicationDetails();
+
+  AppRequest.itemId =
+    $spcontext.getParameterByName("itemid", window.location.href) ||
+    $spcontext.getParameterByName("itemId", window.location.href);
+
+  $("#vt-save-status")
+    .off("click.vtsave")
+    .on("click.vtsave", function () {
+      MainApplication.ViewTaskComponent.saveStatus();
+    });
+
+  if (!AppRequest.itemId) {
+    globalDefinitions.closeLoader();
+    MainApplication.notyf.error("No task specified.");
+    $spcontext.redirect("#/", false);
+    return;
+  }
+
+  MainApplication.ViewTaskComponent.loadTask();
 }
-whenViewTaskDependeciesLoadedxxxxxxx = function () {
-  // globalDefinitions.callLoader();
-  globalDefinitions.extendStages();
-  globalDefinitions.sortResponse();
-  AppRequest = new MainApplication.ViewTask.ApplicationDetails();
-  AppRequest.pendingItems = [];
-  AppRequest.myItems = [];
-  // MainApplication.getNCOnQueue();
-  customWorkflowEngine = new WorkflowManagerEngine(CurrentUserProperties);
-  speedctxRoot.DataForTable.tablecontentId = "speed-data-table";
-  speedctxRoot.DataForTable.pagesize = 20;
-  speedctxRoot.DataForTable.paginateSize = 5;
-  speedctxRoot.DataForTable.modifyTR = false;
-  speedctxRoot.DataForTable.context = speedctxRoot;
-  speedctxRoot.DataForTable.paginationbId = "myrequestpagination";
-  speedctxRoot.DataForTable.paginationuId = "toppagination";
-  speedctxRoot.DataForTable.propertiesHandler = {
-    RequestCreated: function (valueToEva) {
+
+MainApplication.ViewTaskComponent.loadTask = function () {
+  var query = speedctxRoot.camlBuilder([
+    { rowlimit: 1 },
+    {
+      operator: "Eq",
+      field: "ID",
+      type: "Number",
+      val: AppRequest.itemId,
+    },
+  ]);
+
+  speedctxRoot.getListToControl(
+    "MeetingNoteTasks",
+    query,
+    [
+      "ID",
+      "Title",
+      "ReferenceID",
+      "Name",
+      "Email",
+      "Task",
+      "DueDate",
+      "ActionPlan",
+      "Status",
+    ],
+    function (item) {
+      if ($.isEmptyObject(item)) {
+        globalDefinitions.closeLoader();
+        MainApplication.notyf.error("Task not found.");
+        $spcontext.redirect("#/", false);
+        return;
+      }
+
+      AppRequest.taskDetails = item;
+      MainApplication.ViewTaskComponent.renderTask(item);
+
+      $("#viewtask-page").removeClass("hidden");
+      $("#newLoader").hide();
+      globalDefinitions.closeLoader();
+    },
+    function (sender, args) {
+      console.error(
+        "ViewTask load failed",
+        args && args.get_message && args.get_message()
+      );
+      globalDefinitions.closeLoader();
+      MainApplication.notyf.error("Unable to load this task.");
+    }
+  );
+};
+
+MainApplication.ViewTaskComponent.formatDate = function (raw) {
+  if (!raw) return "—";
+  try {
+    if (typeof $spcontext.stringnifyDate === "function") {
       return $spcontext.stringnifyDate({
-        value: valueToEva.RequestCreated,
+        value: raw,
         includeTime: false,
         format: "dd/mm/yy",
       });
-    },
-
-    Modified: function (valueToEva) {
-      // var isActor = MainApplication.isUserAnActor;
-
-      let isActor = false;
-
-      try {
-        isActor =
-          CurrentUserProperties.email === valueToEva.PendingUserLogin ||
-          MainApplication.configuredTaskMembers[valueToEva.Current_Approver]
-            .belongs;
-      } catch (error) {}
-
-      var approvalStr = `
-
-                                    ${
-                                      isActor
-                                        ? `
-                <a title="Approve" href="#/approverequest?itemId=${valueToEva.WorkflowRequestID}" class="btn btn-sm btn-primary btn-icon">
-                    <i class="fa-solid fa-pen" style="font-size:11px"></i>
-                </a>` : ""}`;
-
-      var editStr = `
-                <a title="Modify" class="btn btn-sm btn-primary btn-icon" href="#/newrequest?itemId=${valueToEva.WorkflowRequestID}&mode=correction">
-                  <i class="fa-solid fa-pen" style="font-size:11px"></i>
-                </a>`;
-
-      var editDraftStr = `
-                <a title="Modify" class="btn btn-sm btn-primary btn-icon" href="#/newrequest?itemId=${valueToEva.WorkflowRequestID}&mode=editdraft">
-                  <i class="fa-solid fa-pen" style="font-size:11px"></i>
-                </a>`;
-
-      var viewStr = `
-                <a title="View" href="#/viewrequest?itemId=${valueToEva.WorkflowRequestID}" class="btn btn-sm btn-primary btn-icon">
-                    <i class="fa-solid fa-eye" style="font-size:11px"></i>
-                </a>`;
-
-      if (
-        valueToEva.Approval_Status === globalDefinitions.stageDefinitions.save
-      ) {
-        return `<div class="flex space-x-1 sm:space-x-2">${editDraftStr}</div>`;
-      } else if (
-        valueToEva.Approval_Status === "Pending" &&
-        valueToEva.ReturnForCorrection === "Yes"
-      ) {
-        return `<div class="flex space-x-1 sm:space-x-2">${editStr}</div>`;
-      } else if (
-        valueToEva.Approval_Status === "Completed" ||
-        valueToEva.Approval_Status === "Declined"
-      ) {
-        return `<div class="flex space-x-1 sm:space-x-2">${viewStr}</div>`;
-      } else {
-        return `<div class="flex space-x-1 sm:space-x-2">${approvalStr}</div>`;
-      }
-    },
-  };
-
-  $("#dashboard-tabs").empty();
-
-  // if (MainApplication.isUserAnActor) {
-
-  $("#dashboard-tabs").append(`
-    <div class="dashboard-tabs">
-        <button id="pendingTab" class="tab-btn active" data-tab="pending">
-            Action Required
-            <span id="auditsAwaitingMyAction">0</span>
-        </button>
-        <button id="myAuditsTab" class="tab-btn" data-tab="myAudits">
-            My Requests
-        </button>
-    </div>
-`);
-
-  $(".tab-btn").on("click", function () {
-
-    $(".tab-btn").removeClass("active");
-    $(this).addClass("active");
-
-    const tab = $(this).data("tab");
-
-    switch (tab) {
-
-        case "myAudits":
-            MainApplication.ViewTask.currentTab = "MyAudits";
-            MainApplication.ViewTask.showTableData(AppRequest.myItems);
-            break;
-
-        case "pending":
-            MainApplication.ViewTask.currentTab = "Pending";
-            MainApplication.ViewTask.showTableData(AppRequest.pendingItems);
-            break;
     }
-
-});
-
-  // Fetch data for both tabs
-
-  MainApplication.ViewTask.pendingRequests();
-
-  MainApplication.ViewTask.myRequests();
-
-  MainApplication.ViewTask.currentTab = "Pending";
-
-  // if (
-  //   MainApplication.configuredTaskMembers[
-  //     globalDefinitions.stageDefinitions.management
-  //   ].belongs
-  // ) {
-  //   $(".issue-new-nc-btn").show();
-  // }
-
-  setTimeout(function () {
-    $("#newLoader").hide();
-    $("#dashboard-page").removeClass("hidden");
-    globalDefinitions.closeLoader();
-  }, 2000);
+  } catch (e) {}
+  var s = String(raw);
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+    var p = s.substring(0, 10).split("-");
+    return p[2] + "/" + p[1] + "/" + p[0];
+  }
+  return s;
 };
 
-MainApplication.ViewTask.pendingRequests = function () {
-  var queryCaml = [
-    {
-      ascending: "FALSE",
-      orderby: "Modified",
-    },
-    {
-      operator: "Eq",
-      field: "Approval_Status",
-      type: "Text",
-      val: "Pending",
-    },
+MainApplication.ViewTaskComponent.renderTask = function (data) {
+  var status = data.Status || "Not Started";
+  var isCompleted = String(status).toLowerCase() === "completed";
 
-    // {
-
-    //     operator: 'Eq',
-
-    //     field: 'PendingUserLogin',
-
-    //     type: 'Text',
-
-    //     val: CurrentUserProperties.email
-
-    // },
-  ];
-
-  if (
-    MainApplication.configuredTaskMembers[
-      globalDefinitions.stageDefinitions.management
-    ].belongs
-  ) {
-    queryCaml.push({
-      evaluator: "Or",
-      operator: "Eq",
-      field: "Current_Approver",
-      type: "Text",
-      val: globalDefinitions.stageDefinitions.management,
-    });
-  }
-
-  if (
-    MainApplication.configuredTaskMembers[
-      globalDefinitions.stageDefinitions.ceo
-    ].belongs
-  ) {
-    queryCaml.push({
-      evaluator: "Or",
-      operator: "Eq",
-      field: "Current_Approver",
-      type: "Text",
-      val: globalDefinitions.stageDefinitions.ceo,
-    });
-  }
-
-  if (globalDefinitions.stageDefinitions.employee) {
-    queryCaml.push({
-      evaluator: "Or",
-      operator: "Eq",
-      field: "PendingUserLogin",
-      type: "Text",
-      val: CurrentUserProperties.email,
-    });
-  }
-
-  if (globalDefinitions.stageDefinitions.hod) {
-    queryCaml.push({
-      evaluator: "Or",
-      operator: "Eq",
-      field: "PendingUserLogin",
-      type: "Text",
-      val: CurrentUserProperties.email,
-    });
-  }
-
-  queryCaml = customWorkflowEngine.setupTaskForGroups(queryCaml);
-
-  var query = speedctxRoot.camlBuilder(queryCaml);
-
-  var extraProperties = {
-    merge: true,
-
-    data: [
-      "ID",
-      "Title",
-      "WorkflowRequestID",
-      "Current_Approver",
-      "Current_Approver_Code",
-      "Approval_Status",
-
-      "RequestCreated",
-      "InitiatorEmailAddress",
-      "InitiatorLogin",
-      "Transaction_History",
-      "ReturnForCorrection",
-
-      "Modified",
-      "PendingUserEmail",
-      "PendingUserLogin",
-      "Attachment_Folder",
-      "AttachmentURL",
-      "Comment",
-      "HOD",
-      "Division",
-      "ProcessName",
-      "Modified",
-      "IsApprovalsNeeded",
-      "ConditionalApproval",
-      "RetentionPeriod",
-      "ReasonForAutomation",
-      "Period",
-      "DivisionsInvolved",
-      "StepByStepProcess",
-      "ExistingLink",
-      "PainPoints",
-      "CriteriaForCompletion",
-      "IsProcessRelated",
-      "PullDataFromAnotherSystem",
-      "Approvers",
-      "MaxApprovalTime",
-      "RevokeUser",
-      "ProcessOwner",
-      "OtherFeatures",
-      "ExtraFeatures",
-      "Notifications",
-      "UserAccess",
-      "Reports",
-      "RequirementStatement",
-      "JustificationStatement",
-      "DateRequired",
-      "RelatedProcessInformation",
-      "SystemInformation",
-      "ConditionalApprovalInformation"
-    ],
-  };
-
-  speedctxRoot.getListToItems(
-    configProperties.APPDEVLIST.setting,
-    query,
-    extraProperties,
-    true,
-    null,
-    function (tableData) {
-      AppRequest.pendingItems = tableData;
-
-      $("#auditsAwaitingMyAction").text(tableData.length);
-
-      if (MainApplication.ViewTask.currentTab === "Pending") {
-        MainApplication.ViewTask.showTableData(tableData);
-      }
-    },
+  $("#vt-task-title").text(data.Task || "Action Item");
+  $("#vt-reference").text(data.ReferenceID || "—");
+  $("#vt-name").text(data.Name || "—");
+  $("#vt-type").text(data.Title || "—");
+  $("#vt-email").text(data.Email || "—");
+  $("#vt-due").text(MainApplication.ViewTaskComponent.formatDate(data.DueDate));
+  $("#vt-task-body").text(data.Task || "—");
+  $("#vt-action-plan").text(
+    (data.ActionPlan || "").toString().trim() || "None recorded."
   );
-};
 
-MainApplication.ViewTask.myRequests = function () {
-  var queryToUse = [
-    {
-      ascending: "FALSE",
-
-      orderby: "Modified",
-
-      viewScope: "RecursiveAll",
-    },
-    {
-      operator: "Eq",
-
-      field: "EmployeeEmail",
-
-      type: "Text",
-
-      val: CurrentUserProperties.email,
-    },
-  ];
-
-  var query = speedctxRoot.camlBuilder(queryToUse);
-
-  var extraProperties = {
-    merge: true,
-
-    data: [
-      "ID",
-      "Title",
-      "WorkflowRequestID",
-      "Current_Approver",
-      "Current_Approver_Code",
-      "Approval_Status",
-
-      "RequestCreated",
-      "InitiatorEmailAddress",
-      "InitiatorLogin",
-      "Transaction_History",
-      "ReturnForCorrection",
-
-      "Modified",
-      "PendingUserEmail",
-      "PendingUserLogin",
-      "Attachment_Folder",
-      "AttachmentURL",
-      "Comment",
-      "HOD",
-      "Division",
-      "ProcessName",
-      "Modified",
-      "IsApprovalsNeeded",
-      "ConditionalApproval",
-      "RetentionPeriod",
-      "ReasonForAutomation",
-      "Period",
-      "DivisionsInvolved",
-      "StepByStepProcess",
-      "ExistingLink",
-      "PainPoints",
-      "CriteriaForCompletion",
-      "IsProcessRelated",
-      "PullDataFromAnotherSystem",
-      "Approvers",
-      "MaxApprovalTime",
-      "RevokeUser",
-      "ProcessOwner",
-      "OtherFeatures",
-      "ExtraFeatures",
-      "Notifications",
-      "UserAccess",
-      "Reports",
-      "Delegate",
-      "RequirementStatement",
-      "JustificationStatement",
-      "DateRequired",
-      "RelatedProcessInformation",
-      "SystemInformation",
-      "ConditionalApprovalInformation"
-    ],
-  };
-
-  speedctxRoot.getListToItems(
-    configProperties.APPDEVLIST.setting,
-    query,
-    extraProperties,
-    true,
-    null,
-    function (tableData) {
-      var completedItems = tableData.filter(function (item) {
-        return item.Approval_Status === "Completed" || item.Approval_Status === "Declined";
-      });
-
-      var pendingItems = tableData.filter(function (item) {
-        return item.Approval_Status === "Pending";
-      });
-
-      var draftItems = tableData.filter(function (item) {
-        return item.Approval_Status === "Draft";
-      });
-
-      AppRequest.myItems = tableData;
-
-      // AppRequest.ncData = MainApplication.AuditList;
-      var submittedItems = tableData.length - draftItems.length;
-
-      $("#totalRequest").text(submittedItems);
-      $("#pendingRequest").text(pendingItems.length);
-      $("#completedRequest").text(completedItems.length);
-
-      if (MainApplication.ViewTask.currentTab === "MyAudits") {
-        MainApplication.ViewTask.showTableData(tableData);
-      }
-    },
-  );
-};
-
-MainApplication.ViewTask.showTableData = function (tableData) {
-  if (tableData.length === 0) {
-    $("#tasktable").hide();
-
-    $("#speed-data-table").empty();
-
-    $(".threport").hide();
-
-    $(".norequest").show();
+  var $badge = $("#vt-status-badge");
+  $badge.text(status).removeClass("is-draft is-submitted");
+  if (isCompleted) {
+    $badge.addClass("is-submitted");
+  } else if (String(status).toLowerCase() === "in progress") {
+    $badge.css({ background: "#DBEAFE", color: "#1D4ED8" });
   } else {
-    $("#tasktable").show();
-
-    $(".threport").show();
-
-    $(".norequest").hide();
-
-    speedctxRoot.manualTable(tableData);
+    $badge.addClass("is-draft");
   }
-  
-  $("#dashboard-page").addClass("active");
-  globalDefinitions.closeLoader();
 
+  var $select = $("#vt-status-select");
+  $select.val(status);
+
+  if (isCompleted) {
+    $select.prop("disabled", true);
+    $("#vt-save-status").prop("disabled", true).hide();
+    $("#vt-status-hint").text(
+      "This task is Completed and can no longer be edited."
+    );
+  } else {
+    $select.prop("disabled", false);
+    $("#vt-save-status").prop("disabled", false).show();
+    $("#vt-status-hint").text(
+      "You can change the status until this task is marked Completed."
+    );
+  }
+
+  // Link back to parent meeting note
+  var ref = data.ReferenceID || "";
+  if (ref) {
+    $("#vt-open-note").attr("href", "#/viewnote?itemid=" + encodeURIComponent(ref));
+
+  }
+};
+
+MainApplication.ViewTaskComponent.saveStatus = function () {
+  var details = AppRequest.taskDetails || {};
+  var id = details.ID || AppRequest.itemId;
+  if (!id) {
+    MainApplication.notyf.error("Missing task id.");
+    return;
+  }
+
+  var current = String(details.Status || "").toLowerCase();
+  if (current === "completed") {
+    MainApplication.notyf.error("Completed tasks cannot be updated.");
+    return;
+  }
+
+  var newStatus = $("#vt-status-select").val();
+  if (!newStatus) {
+    MainApplication.notyf.error("Please select a status.");
+    return;
+  }
+
+  if (newStatus === details.Status) {
+    MainApplication.notyf.error("Status is unchanged.");
+    return;
+  }
+
+  globalDefinitions.callLoader();
+
+  speedctxRoot.updateItems(
+    [
+      {
+        ID: id,
+        Status: newStatus,
+      },
+    ],
+    "MeetingNoteTasks",
+    function () {
+      AppRequest.taskDetails.Status = newStatus;
+      MainApplication.ViewTaskComponent.renderTask(AppRequest.taskDetails);
+      globalDefinitions.closeLoader();
+      MainApplication.notyf.success("Status updated to “" + newStatus + "”.");
+    },
+    function (sender, args) {
+      globalDefinitions.closeLoader();
+      console.error(
+        "Status update failed",
+        args && args.get_message && args.get_message()
+      );
+      MainApplication.notyf.error("Unable to update status.");
+    }
+  );
 };
