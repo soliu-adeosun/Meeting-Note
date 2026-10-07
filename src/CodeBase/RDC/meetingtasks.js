@@ -47,6 +47,18 @@ whenMeetingTasksDependeciesLoaded = function () {
         includeTime: false,
         format: "dd/mm/yy",
       });
+    },
+
+    Status: function (valueToEva) {
+      if (valueToEva.Status === "Completed") {
+        return `<span class="vn-task-status is-completed">${valueToEva.Status}</span>`;
+      }
+      if (valueToEva.Status === "In Progress") {
+        return `<span class="vn-task-status is-progress">${valueToEva.Status}</span>`;
+      }
+      if (valueToEva.Status === "Not Started") {
+        return `<span class="vn-task-status is-notstarted">${valueToEva.Status}</span>`;
+      }
     }
   };
 

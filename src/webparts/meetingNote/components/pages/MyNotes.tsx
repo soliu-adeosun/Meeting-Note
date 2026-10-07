@@ -37,7 +37,7 @@ export default class MyNotes extends React.Component<{}, {}> {
                     <span>Meeting Category</span>
                     <select id="status-filter" speed-bind-query="MeetingCategory" speed-operator="Eq">
                       <option value="">All</option>
-                      <option value="Divison/Unit Meeting">Divison/Unit Meeting</option>
+                      <option value="Division/Unit Meeting">Division/Unit Meeting</option>
                       <option value="Organizational Meeting">Organizational Meeting</option>
                       <option value="Strategy Meeting">Strategy Meeting</option>
                       <option value="Committee Meeting">Committee Meeting</option>

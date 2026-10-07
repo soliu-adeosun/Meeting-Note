@@ -28,8 +28,8 @@ export default class PreviousNotes extends React.Component<{}, {}> {
                       speed-operator="Eq"
                     >
                       <option value="">All</option>
-                      <option value="Divison/Unit Meeting">
-                        Divison/Unit Meeting
+                      <option value="Division/Unit Meeting">
+                        Division/Unit Meeting
                       </option>
                       <option value="Organizational Meeting">
                         Organizational Meeting

@@ -55,6 +55,14 @@ whenMyNotesDependeciesLoaded = function () {
         includeTime: false,
         format: "dd/mm/yy",
       });
+    },
+    Status: function (valueToEva) {
+      if (valueToEva.Status === "Submitted") {
+        return `<span class="vn-task-status is-completed">${valueToEva.Status}</span>`;
+      }
+      if (valueToEva.Status === "Draft") {
+        return `<span class="vn-task-status is-notstarted">${valueToEva.Status}</span>`;
+      }
     }
   };
 
