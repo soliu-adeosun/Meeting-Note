@@ -39,16 +39,27 @@ PeoplePicker.initializePeoplePickers = function (peopleListMap, pickerEvents, at
       $picker.append(str);
     });
 
-    const placeholderText = $picker.attr("placeholder") || "Enter a name";
-    const modalParent = $picker.closest('.modal');
+    const isMultiple = !!$picker.prop("multiple");
+    const placeholderText =
+      $picker.attr("placeholder") ||
+      (isMultiple ? "Select people…" : "Select a person…");
+    const modalParent = $picker.closest(".modal, .ai-modal-panel, .ai-modal");
+
+    // Show the full staff list as soon as the control opens (no typing required).
+    // Typing still filters via the custom matcher below.
     var options = {
       placeholder: placeholderText,
-      allowClear: !$picker.prop("multiple"),
-      minimumInputLength: 3,
+      allowClear: !isMultiple,
+      minimumInputLength: 0,
+      minimumResultsForSearch: 0,
+      // Keep dropdown open while multi-selecting so users can pick many people quickly
+      closeOnSelect: !isMultiple,
+      width: "100%",
       templateResult: formatOption,
       templateSelection: formatOption,
       matcher: function (params, data) {
-        if ($.trim(params.term) === '') {
+        // Empty search → show every option (Select2 default behavior with minInput 0)
+        if ($.trim(params.term) === "") {
           return data;
         }
         const term = params.term.toLowerCase();
@@ -60,14 +71,54 @@ PeoplePicker.initializePeoplePickers = function (peopleListMap, pickerEvents, at
         }
         return null;
       },
-      ...(modalParent.length && { dropdownParent: modalParent })
+      ...(modalParent.length && { dropdownParent: modalParent }),
     };
 
     $picker.select2(options);
 
+    // Mark multi pickers so CSS can apply a fixed scrollable height
+    if (isMultiple) {
+      $picker
+        .next(".select2-container")
+        .addClass("select2-people-multi");
+
+      // Select2 re-renders the results list after each multi selection and
+      // resets scrollTop to 0. Capture the position before the update and
+      // restore it afterwards so users can keep picking from where they were.
+      $picker
+        .off("select2:selecting.preserveScroll select2:select.preserveScroll")
+        .on("select2:selecting.preserveScroll", function () {
+          var $results = $(".select2-results__options");
+          if ($results.length) {
+            $picker.data("select2ScrollTop", $results.scrollTop());
+          }
+        })
+        .on("select2:select.preserveScroll", function () {
+          var scrollTop = $picker.data("select2ScrollTop");
+          if (scrollTop == null) return;
+
+          // Results list is rebuilt asynchronously after the selection
+          var restore = function () {
+            var $results = $(".select2-results__options");
+            if ($results.length) {
+              $results.scrollTop(scrollTop);
+            }
+          };
+          // Double rAF covers the DOM rebuild Select2 does after select
+          requestAnimationFrame(function () {
+            requestAnimationFrame(restore);
+          });
+          // Fallback in case the rebuild is slightly later
+          setTimeout(restore, 0);
+          setTimeout(restore, 50);
+        });
+    }
+
     if (typeof pickerEvents !== "undefined") {
       PeoplePicker.pickerEventDefinitions = pickerEvents;
-      $(picker).on('select2:select', function (e) {
+      $(picker)
+        .off("select2:select.pickerEvents")
+        .on("select2:select.pickerEvents", function (e) {
         var selectedValue = e.params.data.id;
         var prop = e.target.getAttribute("custom-people");
         if (typeof PeoplePicker.pickerEventDefinitions[prop] == "function") {

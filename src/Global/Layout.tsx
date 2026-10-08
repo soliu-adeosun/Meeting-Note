@@ -13,6 +13,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import '../Assets/css/sharepointuifix.css';
 import "../Assets/css/style.css";
 import "../Assets/css/newpage.css";
+import "../Assets/css/peoplepicker.css";
 
 require("speedpoint_core");
 require("workflowengine");
