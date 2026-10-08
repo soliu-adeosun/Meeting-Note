@@ -1,12 +1,14 @@
 import * as React from "react";
-// import ClientButton from "../../../../Global/ClientButton";
 import { NewLoader } from "../../../../Global/NewLoader";
-// import { NewLoader } from "../../../../Global/NewLoader";
-// import CustomPeoplePicker from "../../../../Global/CustomPeoplePicker";
 
 require("mynotes");
 require("peoplepicker");
 
+/**
+ * Unified notes list with two tabs:
+ *  - My Notes: notes I created (Reporter = me), drafts + submitted
+ *  - Previous Notes: submitted notes I created or attended
+ */
 export default class MyNotes extends React.Component<{}, {}> {
   public render(): React.ReactElement {
     return (
@@ -14,49 +16,85 @@ export default class MyNotes extends React.Component<{}, {}> {
         <NewLoader />
         <section className="hidden" id="mynotes-page">
           <div className="AdrPage">
-            <section className="AdrStatsGrid">
+            {/* Tabs */}
+            <div className="notes-tabs" role="tablist" aria-label="Notes views">
+              <button
+                type="button"
+                className="notes-tab active"
+                role="tab"
+                id="tab-my-notes"
+                data-tab="my"
+                aria-selected="true"
+              >
+                My Notes
+              </button>
+              <button
+                type="button"
+                className="notes-tab"
+                role="tab"
+                id="tab-previous-notes"
+                data-tab="previous"
+                aria-selected="false"
+              >
+                Previous Notes
+              </button>
+            </div>
+
+            <section className="AdrStatsGrid" id="notes-stats">
               <article>
-                <span>Total Notes</span>
+                <span id="stat-label-total">Total Notes</span>
                 <strong id="totalRequest"></strong>
               </article>
-              <article>
+              <article id="stat-drafts">
                 <span>Drafted Notes</span>
                 <strong id="pendingRequest"></strong>
               </article>
               <article>
-                <span>Submitted Notes</span>
+                <span id="stat-label-submitted">Submitted Notes</span>
                 <strong id="completedRequest"></strong>
               </article>
             </section>
 
             <section className="AdrPanel">
-
               <div className="AdrReportControls filter-container" role="tabpanel">
-                <div className="AdrFormGrid left-filter-grid three-column" >
+                <div className="AdrFormGrid left-filter-grid three-column">
                   <label className="AdrField">
                     <span>Meeting Category</span>
-                    <select id="status-filter" speed-bind-query="MeetingCategory" speed-operator="Eq">
+                    <select
+                      id="status-filter"
+                      speed-bind-query="MeetingCategory"
+                      speed-operator="Eq"
+                    >
                       <option value="">All</option>
-                      <option value="Division/Unit Meeting">Division/Unit Meeting</option>
-                      <option value="Organizational Meeting">Organizational Meeting</option>
+                      <option value="Division/Unit Meeting">
+                        Division/Unit Meeting
+                      </option>
+                      <option value="Organizational Meeting">
+                        Organizational Meeting
+                      </option>
                       <option value="Strategy Meeting">Strategy Meeting</option>
-                      <option value="Committee Meeting">Committee Meeting</option>
+                      <option value="Committee Meeting">
+                        Committee Meeting
+                      </option>
                       <option value="Adhoc Meeting">Adhoc Meeting</option>
                     </select>
                   </label>
                   <label className="AdrField">
                     <span>Meeting Type</span>
-                    <select id="status-filter-type" speed-bind-query="MeetingType" speed-operator="Eq">
-                  
-                    </select>
+                    <select
+                      id="status-filter-type"
+                      speed-bind-query="MeetingType"
+                      speed-operator="Eq"
+                    />
                   </label>
                   <label className="AdrField">
                     <span>Search Note</span>
-                    <input placeholder="Search by Reference ID/Meeting Type"  id="searchInput"/>
+                    <input
+                      placeholder="Search by Reference ID / Meeting Type"
+                      id="searchInput"
+                    />
                   </label>
                 </div>
-                {/* <button className="AdrPrimaryButton" type="button" id="exportToExcel"><span>⇩</span> Export to Excel</button> */}
-
               </div>
 
               <div className="table-wrap">
@@ -69,13 +107,15 @@ export default class MyNotes extends React.Component<{}, {}> {
                       <tr>
                         <th>S/N</th>
                         <th speed-table-data="ReferenceID">Meeting ID</th>
-                        <th speed-table-data="MeetingCategory">Meeting Category</th>
+                        <th speed-table-data="MeetingCategory">
+                          Meeting Category
+                        </th>
                         <th speed-table-data="MeetingType">Meeting Type</th>
                         <th speed-table-data="MeetingDate">Meeting Date</th>
                         <th speed-table-data="Status">Status</th>
                       </tr>
                     </thead>
-                    <tbody id="speed-data-table"></tbody>
+                    <tbody id="speed-data-table" />
                   </table>
                 </div>
                 <div id="myrequestpagination" className="pagination" />

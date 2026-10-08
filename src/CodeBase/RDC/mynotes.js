@@ -8,21 +8,21 @@ loadMyNotesComponent = function () {
 
 var AppRequest;
 
+MainApplication.MyNotesComponent = MainApplication.MyNotesComponent || {};
+
 MainApplication.MyNotesComponent.ApplicationDetails = function () {
   this.fullTableData = [];
   this.dataForExport = [];
-}
+  this.myNotesData = [];
+  this.previousNotesData = [];
+  this.currentTab = "my"; // "my" | "previous"
+  this.loaded = { my: false, previous: false };
+};
 
 whenMyNotesDependeciesLoaded = function () {
-  // console.log("MyNotes Dependencies Loaded");
   globalDefinitions.sortResponse();
 
-  // $("#requeststrDate").datepicker({ dateFormat: 'yy-mm-dd', beforeShow: function () { jQuery(this).datepicker('option', 'maxDate', $('#requestendDate').val()); } });
-  // $("#requestendDate").datepicker({ dateFormat: 'yy-mm-dd', beforeShow: function () { jQuery(this).datepicker('option', 'minDate', $('#requeststrDate').val()); } });
   AppRequest = new MainApplication.MyNotesComponent.ApplicationDetails();
-  AppRequest.fullTableData = [];
-  AppRequest.dataForExport = [];
-
 
   speedctxRoot.DataForTable.tablecontentId = "speed-data-table";
   speedctxRoot.DataForTable.pagesize = 20;
@@ -34,20 +34,23 @@ whenMyNotesDependeciesLoaded = function () {
 
   speedctxRoot.DataForTable.propertiesHandler = {
     ReferenceID: function (valueToEva) {
-      var viewStr = `
-                <a class="brown-anchor" title="View Meeting Note" href="#/viewnote?itemId=${valueToEva.ReferenceID}">
-                    ${valueToEva.ReferenceID}
-                </a>`;
-      var editStr = `
-                <a class="brown-anchor" title="Edit Meeting Note" href="#/newmeetingnote?itemId=${valueToEva.ReferenceID}">
-                    ${valueToEva.ReferenceID}
-                </a>`;
+      var viewStr =
+        '<a class="brown-anchor" title="View Meeting Note" href="#/viewnote?itemId=' +
+        valueToEva.ReferenceID +
+        '">' +
+        valueToEva.ReferenceID +
+        "</a>";
+      var editStr =
+        '<a class="brown-anchor" title="Edit Meeting Note" href="#/newmeetingnote?itemId=' +
+        valueToEva.ReferenceID +
+        '">' +
+        valueToEva.ReferenceID +
+        "</a>";
 
       if (valueToEva.Status === "Submitted") {
         return viewStr;
-      } else {
-        return editStr;
       }
+      return editStr;
     },
     MeetingDate: function (valueToEva) {
       return $spcontext.stringnifyDate({
@@ -58,55 +61,61 @@ whenMyNotesDependeciesLoaded = function () {
     },
     Status: function (valueToEva) {
       if (valueToEva.Status === "Submitted") {
-        return `<span class="vn-task-status is-completed">${valueToEva.Status}</span>`;
+        return (
+          '<span class="vn-task-status is-completed">' +
+          valueToEva.Status +
+          "</span>"
+        );
       }
       if (valueToEva.Status === "Draft") {
-        return `<span class="vn-task-status is-notstarted">${valueToEva.Status}</span>`;
+        return (
+          '<span class="vn-task-status is-notstarted">' +
+          valueToEva.Status +
+          "</span>"
+        );
       }
-    }
+      return valueToEva.Status || "";
+    },
   };
 
-  MainApplication.MyNotesComponent.populateMeetingTypeDropdown();
+  // Tab switching (namespaced so re-entry is safe)
+  $(document)
+    .off("click.notesTab", ".notes-tab")
+    .on("click.notesTab", ".notes-tab", function () {
+      var tab = $(this).data("tab");
+      if (!tab || tab === AppRequest.currentTab) return;
+      MainApplication.MyNotesComponent.switchTab(tab);
+    });
 
-  $("#status-filter, #status-filter-type").on("keyup change", function () {
-    var searchQuery = $(this).val();
-    var data = AppRequest.fullTableData || [];
-    var filteredItems = MainApplication.reportSyncSearch(searchQuery, data);
-    MainApplication.MyNotesComponent.showTableData(filteredItems);
-  });
+  $("#status-filter, #status-filter-type")
+    .off("change.notesFilter")
+    .on("change.notesFilter", function () {
+      MainApplication.MyNotesComponent.applyClientFilters();
+    });
 
-  $("#exportToExcel").click(() => {
-    MainApplication.MyNotesComponent.exportToExcel();
-  });
+  $("#searchInput")
+    .off("keyup.notesSearch")
+    .on("keyup.notesSearch", function () {
+      MainApplication.MyNotesComponent.applyClientFilters();
+    });
 
-  $("#searchInput").on("keyup", function () {
-    var searchQuery = $(this).val();
-    var data = AppRequest.fullTableData || [];
-    var filteredItems = MainApplication.reportSyncSearch(searchQuery, data);
-    MainApplication.MyNotesComponent.showTableData(filteredItems);
-  });
+  // Honour ?tab=previous in the hash (e.g. #/mynotes?tab=previous or redirected /previousnotes)
+  var tabParam = "";
+  try {
+    var hash = window.location.hash || "";
+    var q = hash.indexOf("?") > -1 ? hash.split("?")[1] : (window.location.search || "").replace(/^\?/, "");
+    tabParam = (new URLSearchParams(q).get("tab") || "").toLowerCase();
+  } catch (e) {}
+  if (tabParam === "previous") {
+    AppRequest.currentTab = "previous";
+  }
 
-  MainApplication.MyNotesComponent.retrieveRequest();
-
+  MainApplication.MyNotesComponent.syncTabUI();
+  MainApplication.MyNotesComponent.loadActiveTab(true);
 };
 
-MainApplication.MyNotesComponent.retrieveRequest = function () {
-
-  var currentUser = CurrentUserProperties.title;
-  var query = `<View Scope="RecursiveAll">
-    <Query>
-        <Where>
-            <Eq>
-                <FieldRef Name="Reporter"/>
-                <Value Type="Text">${currentUser}</Value>
-            </Eq>
-        </Where>
-        <OrderBy>
-            <FieldRef Name="Modified" Ascending="FALSE"/>
-        </OrderBy>
-    </Query>
-</View>`;
-  var extraProperties = {
+MainApplication.MyNotesComponent.listColumns = function () {
+  return {
     merge: true,
     data: [
       "ID",
@@ -117,62 +126,235 @@ MainApplication.MyNotesComponent.retrieveRequest = function () {
       "MeetingWeek",
       "MeetingDate",
       "RequiredTime",
-
       "Attendees",
       "TimeOff",
       "TimeKeeper",
-
       "Presenter",
       "EngagementParticipant",
-
       "AOB",
       "StartTime",
       "EndTime",
-
       "Absentees",
       "Agenda",
       "Discussion",
-
       "NumberOfTaskItems",
       "Modified",
       "Status",
-
       "Reporter",
       "Tasks",
     ],
   };
+};
+
+MainApplication.MyNotesComponent.listName = function () {
+  return (
+    (configProperties.MTNNOTELIST && configProperties.MTNNOTELIST.setting) ||
+    globalDefinitions.stageDefinitions.listname
+  );
+};
+
+MainApplication.MyNotesComponent.switchTab = function (tab) {
+  AppRequest.currentTab = tab;
+  MainApplication.MyNotesComponent.syncTabUI();
+
+  // Reset filters when switching
+  $("#status-filter").val("");
+  $("#status-filter-type").html('<option value="">All</option>');
+  $("#searchInput").val("");
+
+  MainApplication.MyNotesComponent.loadActiveTab(false);
+};
+
+MainApplication.MyNotesComponent.syncTabUI = function () {
+  var tab = AppRequest.currentTab;
+
+  $(".notes-tab").removeClass("active").attr("aria-selected", "false");
+  $('.notes-tab[data-tab="' + tab + '"]')
+    .addClass("active")
+    .attr("aria-selected", "true");
+
+  if (tab === "my") {
+    $("#stat-drafts").show();
+    $("#stat-label-total").text("Total Notes");
+    $("#stat-label-submitted").text("Submitted Notes");
+  } else {
+    // Previous notes are all Submitted — hide draft stat
+    $("#stat-drafts").hide();
+    $("#stat-label-total").text("Total Notes");
+    $("#stat-label-submitted").text("Submitted Notes");
+  }
+};
+
+MainApplication.MyNotesComponent.loadActiveTab = function (force) {
+  var tab = AppRequest.currentTab;
+
+  if (tab === "my") {
+    if (!force && AppRequest.loaded.my) {
+      MainApplication.MyNotesComponent.applyDataset(AppRequest.myNotesData);
+      return;
+    }
+    MainApplication.MyNotesComponent.retrieveMyNotes();
+  } else {
+    if (!force && AppRequest.loaded.previous) {
+      MainApplication.MyNotesComponent.applyDataset(AppRequest.previousNotesData);
+      return;
+    }
+    MainApplication.MyNotesComponent.retrievePreviousNotes();
+  }
+};
+
+/** Notes I created (any status) */
+MainApplication.MyNotesComponent.retrieveMyNotes = function () {
+  var listName = MainApplication.MyNotesComponent.listName();
+  if (!listName) {
+    setTimeout(MainApplication.MyNotesComponent.retrieveMyNotes, 400);
+    return;
+  }
+
+  var currentUser = CurrentUserProperties.title;
+  var query =
+    '<View Scope="RecursiveAll"><Query><Where>' +
+    '<Eq><FieldRef Name="Reporter"/><Value Type="Text">' +
+    currentUser +
+    "</Value></Eq>" +
+    '</Where><OrderBy><FieldRef Name="Modified" Ascending="FALSE"/></OrderBy>' +
+    "</Query></View>";
+
+  globalDefinitions.callLoader && globalDefinitions.callLoader();
 
   speedctxRoot.getListToItems(
-    configProperties.MTNNOTELIST.setting,
+    listName,
     query,
-    extraProperties,
+    MainApplication.MyNotesComponent.listColumns(),
     true,
     null,
     function (tableData) {
-      console.log("Table Data: ", tableData);
-      AppRequest.fullTableData = tableData;
-
-      var completedItems = tableData.filter(function (item) {
-        return item.Status === "Submitted";
-      });
-
-      var pendingItems = tableData.filter(function (item) {
-        return item.Status === "Draft";
-      });
-      
-
-      $("#totalRequest").text(tableData.length);
-      $("#pendingRequest").text(pendingItems.length);
-      $("#completedRequest").text(completedItems.length);
-
-      MainApplication.MyNotesComponent.showTableData(tableData);
-    },
+      AppRequest.myNotesData = tableData || [];
+      AppRequest.loaded.my = true;
+      if (AppRequest.currentTab === "my") {
+        MainApplication.MyNotesComponent.applyDataset(AppRequest.myNotesData);
+      }
+    }
   );
+};
+
+/** Submitted notes I reported or attended */
+MainApplication.MyNotesComponent.retrievePreviousNotes = function () {
+  var listName = MainApplication.MyNotesComponent.listName();
+  if (!listName) {
+    setTimeout(MainApplication.MyNotesComponent.retrievePreviousNotes, 400);
+    return;
+  }
+
+  var currentUserID = CurrentUserProperties.id;
+  var currentUser = CurrentUserProperties.title;
+  var query =
+    '<View Scope="RecursiveAll"><Query><Where><And>' +
+    '<Eq><FieldRef Name="Status"/><Value Type="Text">Submitted</Value></Eq>' +
+    "<Or>" +
+    '<Eq><FieldRef Name="Reporter"/><Value Type="Text">' +
+    currentUser +
+    "</Value></Eq>" +
+    '<Eq><FieldRef Name="Attendees" LookupId="TRUE"/><Value Type="Integer">' +
+    currentUserID +
+    "</Value></Eq>" +
+    "</Or></And></Where>" +
+    '<OrderBy><FieldRef Name="Modified" Ascending="FALSE"/></OrderBy>' +
+    "</Query></View>";
+
+  globalDefinitions.callLoader && globalDefinitions.callLoader();
+
+  speedctxRoot.getListToItems(
+    listName,
+    query,
+    MainApplication.MyNotesComponent.listColumns(),
+    true,
+    null,
+    function (tableData) {
+      AppRequest.previousNotesData = tableData || [];
+      AppRequest.loaded.previous = true;
+      if (AppRequest.currentTab === "previous") {
+        MainApplication.MyNotesComponent.applyDataset(
+          AppRequest.previousNotesData
+        );
+      }
+    }
+  );
+};
+
+MainApplication.MyNotesComponent.applyDataset = function (tableData) {
+  AppRequest.fullTableData = tableData || [];
+
+  var completedItems = AppRequest.fullTableData.filter(function (item) {
+    return item.Status === "Submitted";
+  });
+  var pendingItems = AppRequest.fullTableData.filter(function (item) {
+    return item.Status === "Draft";
+  });
+
+  $("#totalRequest").text(AppRequest.fullTableData.length);
+  $("#pendingRequest").text(pendingItems.length);
+  $("#completedRequest").text(completedItems.length);
+
+  MainApplication.MyNotesComponent.populateMeetingTypeFilter(
+    AppRequest.fullTableData
+  );
+  MainApplication.MyNotesComponent.showTableData(AppRequest.fullTableData);
+};
+
+MainApplication.MyNotesComponent.populateMeetingTypeFilter = function (data) {
+  var types = [];
+  (data || []).forEach(function (item) {
+    if (item.MeetingType) types.push(item.MeetingType);
+  });
+  var unique = Array.from(new Set(types)).filter(Boolean).sort();
+
+  var $sel = $("#status-filter-type");
+  var current = $sel.val();
+  $sel.html('<option value="">All</option>');
+  unique.forEach(function (t) {
+    $sel.append($("<option>", { value: t, text: t }));
+  });
+  if (current) $sel.val(current);
+};
+
+MainApplication.MyNotesComponent.applyClientFilters = function () {
+  var data = AppRequest.fullTableData || [];
+  var category = $("#status-filter").val();
+  var meetingType = $("#status-filter-type").val();
+  var searchQuery = ($("#searchInput").val() || "").trim();
+
+  var filtered = data.filter(function (item) {
+    if (category && item.MeetingCategory !== category) return false;
+    if (meetingType && item.MeetingType !== meetingType) return false;
+    return true;
+  });
+
+  if (searchQuery && typeof MainApplication.reportSyncSearch === "function") {
+    filtered = MainApplication.reportSyncSearch(searchQuery, filtered);
+  } else if (searchQuery) {
+    var q = searchQuery.toLowerCase();
+    filtered = filtered.filter(function (item) {
+      return (
+        String(item.ReferenceID || "")
+          .toLowerCase()
+          .indexOf(q) > -1 ||
+        String(item.MeetingType || "")
+          .toLowerCase()
+          .indexOf(q) > -1 ||
+        String(item.Title || "")
+          .toLowerCase()
+          .indexOf(q) > -1
+      );
+    });
+  }
+
+  MainApplication.MyNotesComponent.showTableData(filtered);
 };
 
 MainApplication.MyNotesComponent.showTableData = function (tableData) {
   AppRequest.dataForExport = tableData;
-  if (tableData.length === 0) {
+  if (!tableData || tableData.length === 0) {
     $("#tasktable").hide();
     $("#speed-data-table").empty();
     $(".threport").hide();
@@ -187,123 +369,3 @@ MainApplication.MyNotesComponent.showTableData = function (tableData) {
   $("#mynotes-page").removeClass("hidden");
   globalDefinitions.closeLoader();
 };
-
-MainApplication.MyNotesComponent.exportToExcel = function () {
-  var excelName =
-    configProperties.MTNNOTELIST.setting + $spcontext.stringnifyDate() + ".csv";
-  var dataStringHeader = [
-    "Description",
-    "Task Category",
-    "Due Date",
-    "Status",
-  ];
-
-  var excelData = dataStringHeader.toString() + "\n";
-
-  $.each(AppRequest.dataForExport, function (index, itemProperties) {
-    var dataString = [];
-    dataString.push(itemProperties.Task);
-    dataString.push(itemProperties.Title);
-    dataString.push(
-      $spcontext.stringnifyDate({
-        value: itemProperties.DueDate,
-        includeTime: false,
-      }),
-    );
-    dataString.push(itemProperties.Status);
-
-    excelData += dataString.toString() + "\n";
-    excelData = "\uFEFF" + excelData;
-  });
-
-  MainApplication.MyNotesComponent.downloadData(excelName, excelData);
-};
-
-MainApplication.MyNotesComponent.downloadData = function (excelname, data) {
-  if (navigator.msSaveOrOpenBlob) {
-    var blobContent = data;
-    // Works for Internet Explorer and Microsoft Edge
-    var blob = new Blob([blobContent], { type: "text/csv" });
-    navigator.msSaveOrOpenBlob(blob, excelname);
-  } else {
-    var encodedString;
-    var downloadLink;
-    try {
-      encodedString = btoa(data);
-      downloadLink = `data:text/csv;base64,${encodedString}`;
-    } catch (e) {
-      var csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += data;
-      var blob = new Blob([data]);
-      if (blob.size > 2000000) {
-        globalDefinitions.HandlerError(
-          "Please use the filter to reduce the data size, as the size of the data exceeds 2MB",
-        );
-      }
-      downloadLink = encodeURI(csvContent);
-    }
-
-    var link = document.createElement("a");
-    link.setAttribute("href", downloadLink);
-    link.setAttribute("download", excelname);
-    link.click();
-  }
-};
-
-MainApplication.MyNotesComponent.validateCSVContent = function (data) {
-  if (typeof data == "string") {
-    //data = data.replace(/,/g, "~");
-    data = data.replace(/\n/g, "");
-    data = data.replace(/\r/g, "");
-    data = data.replace(/\r\n/g, "");
-    data = MainApplication.MyNotesComponent.encloseStringWithCommaCheck(data);
-  }
-  return data;
-};
-
-MainApplication.MyNotesComponent.encloseStringWithCommaCheck = function (value) {
-  if (value.includes(",")) {
-    return '"' + value + '"';
-  }
-  return value;
-};
-
-MainApplication.MyNotesComponent.updateDateConstraints = function () {
-  var startDate = $("#requeststrDate").val();
-  var endDate = $("#requestendDate").val();
-  if (startDate) {
-    $("#requestendDate").attr("min", startDate);
-  } else {
-    $("#requestendDate").removeAttr("min");
-  }
-
-  if (endDate) {
-    $("#requeststrDate").attr("max", endDate);
-  } else {
-    $("#requeststrDate").removeAttr("max");
-  }
-};
-
-MainApplication.MyNotesComponent.populateMeetingTypeDropdown = function () {
-  var meetingTypes = Object.values(MainApplication.meetingType || {})
-    .flat()
-    .map(function (item) {
-        return item.Title;
-    })
-    .filter(Boolean);
-
-  var divisions = MainApplication.newDivisions || [];
-
-  var filterOptions = [...new Set([...divisions, ...meetingTypes])];
-
-  $("#status-filter-type").html('<option value="">All</option>');
-
-  filterOptions.forEach(function (item) {
-      $("#status-filter-type").append(
-          $("<option>", {
-              value: item,
-              text: item
-          })
-      );
-  });
-}

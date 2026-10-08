@@ -69,8 +69,7 @@ const NavIcon: React.FC<{name: IconName}> = ({name}) => {
 const NAV_ITEMS: {path: string; label: string; icon: IconName}[] = [
     {path: "/", label: "View Meeting Tasks", icon: "task"},
     {path: "/newmeetingnote", label: "New Meeting Note", icon: "new"},
-    {path: "/previousnotes", label: "Previous Meeting Notes", icon: "previous"},
-    {path: "/mynotes", label: "My Meeting Notes", icon: "form"},
+    {path: "/mynotes", label: "Meeting Notes", icon: "form"},
 ];
 
 const GlobalSideNav: React.FC<GlobalSideNavProps> = ({isOpen, onClose}) => {

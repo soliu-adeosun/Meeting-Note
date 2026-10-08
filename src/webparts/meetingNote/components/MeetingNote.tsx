@@ -1,11 +1,10 @@
 import * as React from 'react';
 import type { IMeetingNoteProps } from './IMeetingNoteProps';
 
-import {Route, Routes, HashRouter} from "react-router-dom";
+import {Route, Routes, HashRouter, Navigate} from "react-router-dom";
 import {Layout} from "../../../Global/Layout";
 import NewNote from "./pages/NewNote";
 import MeetingTasks from './pages/MeetingTasks';
-import PreviousNotes from './pages/PreviousNotes';
 import MyNotes from './pages/MyNotes';
 import ViewNote from './pages/ViewNote';
 import ViewTask from './pages/ViewTask';
@@ -37,7 +36,7 @@ export default class AppDev extends React.Component<IMeetingNoteProps> {
                   <Route path="/" element={<Layout />}>
                         <Route index element={<MeetingTasks />} />
                         <Route path="newmeetingnote" element={<NewNote />} />
-                        <Route path="previousnotes" element={<PreviousNotes />} />
+                        <Route path="previousnotes" element={<Navigate to="/mynotes?tab=previous" replace />} />
                         <Route path="mynotes" element={<MyNotes />} />
                         <Route path="viewnote" element={<ViewNote />} />
                         <Route path="viewtask" element={<ViewTask />} />

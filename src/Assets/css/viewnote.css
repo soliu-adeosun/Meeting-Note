@@ -511,3 +511,38 @@ button.vn-back {
   cursor: pointer;
 }
 button.vn-back:hover { text-decoration: underline; }
+
+
+/* Unified Notes page tabs */
+.notes-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #E0E3E8);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  width: fit-content;
+  max-width: 100%;
+}
+.notes-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 8px 16px;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted, #667085);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.notes-tab:hover {
+  color: var(--text, #1F232C);
+  background: var(--surface-soft, #FBFAF8);
+}
+.notes-tab.active {
+  background: var(--accent, #A0441D);
+  color: #fff;
+}
