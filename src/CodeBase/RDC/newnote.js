@@ -59,6 +59,7 @@ function whenNewNoteDependeciesLoaded() {
   MainApplication.DateConstraints.applyMeetingDateRules();
   MainApplication.NewNoteComponent.bindMeetingDate();
   MainApplication.NewNoteComponent.prepareAllTables();
+  MainApplication.NewNoteComponent.renderActionItems();
 
   // Support both hash query shapes: #/?itemId=… and #/newmeetingnote?itemid=…
   AppRequest.itemId =
@@ -435,24 +436,38 @@ MainApplication.NewNoteComponent.saveConfirmed = function () {
 MainApplication.NewNoteComponent.toPersonField = function (emails, multiple) {
   multiple = !!multiple;
 
-  var list = [];
-  if (emails == null || emails === "") {
-    return multiple ? [] : null;
-  }
-  if (Array.isArray(emails)) {
-    list = emails;
-  } else {
-    list = [emails];
+  function isEmptyPerson(v) {
+    if (v == null || v === "") return true;
+    if (typeof v === "object") {
+      // JSOM FieldUserValue internals / common shapes
+      var login =
+        v.$GN_1 != null ? v.$GN_1 :
+        v.get_lookupValue ? v.get_lookupValue() :
+        v.Key || v.Email || v.LoginName || "";
+      var id =
+        v.$62_1 != null ? v.$62_1 :
+        v.get_lookupId ? v.get_lookupId() :
+        v.Id;
+      if (String(login).trim() === "" || id === -1) return true;
+    }
+    return false;
   }
 
+  if (isEmptyPerson(emails)) {
+    return null;
+  }
+
+  var list = Array.isArray(emails) ? emails : [emails];
   var values = [];
+
   list.forEach(function (email) {
-    if (!email) return;
-    // Already a FieldUserValue-like object
+    if (isEmptyPerson(email)) return;
+
     if (typeof email === "object" && email !== null) {
       values.push(email);
       return;
     }
+
     var str = String(email).trim();
     if (!str) return;
     try {
@@ -463,17 +478,39 @@ MainApplication.NewNoteComponent.toPersonField = function (emails, multiple) {
   });
 
   if (multiple) {
-    return values;
+    return values.length ? values : null;
   }
   return values.length ? values[0] : null;
+};
+
+// helper: only set person fields when there is a real value
+MainApplication.NewNoteComponent.assignPersonFields = function (formData, configured, pickerValues) {
+  var toPerson = MainApplication.NewNoteComponent.toPersonField;
+  var map = [
+    { key: "TimeKeeper", multiple: false },
+    { key: "Attendees", multiple: true },
+    { key: "TimeOff", multiple: true },
+    { key: "Presenter", multiple: true },
+    { key: "EngagementParticipant", multiple: true },
+  ];
+
+  map.forEach(function (f) {
+    var raw = (configured && configured[f.key]) || (pickerValues && pickerValues[f.key]);
+    var val = toPerson(raw, f.multiple);
+    if (val == null || (Array.isArray(val) && val.length === 0)) {
+      delete formData[f.key]; // omit empty optional / empty multi
+    } else {
+      formData[f.key] = val;
+    }
+  });
 };
 
 MainApplication.NewNoteComponent.saveDataToList = function () {
   globalDefinitions.onActionClicked();
 
   var formData = $spcontext.bind({});
-  var pickerValues = PeoplePicker.getValue();
-  var people = PeoplePicker.getConfiguredValue();
+  var pickerValues = PeoplePicker.getValue() || {};
+  var people = PeoplePicker.getConfiguredValue() || {};
 
 
   if ($spcontext.checkPassedValidation()) {
@@ -481,29 +518,7 @@ MainApplication.NewNoteComponent.saveDataToList = function () {
     try {
       // Person columns need SP.FieldUserValue, not email JSON strings.
       // Prefer getConfiguredValue() (plain emails) then convert.
-      var configured = people || {};
-      var toPerson = MainApplication.NewNoteComponent.toPersonField;
-
-      formData.TimeKeeper = toPerson(
-        configured.TimeKeeper || pickerValues?.TimeKeeper,
-        false
-      );
-      formData.Attendees = toPerson(
-        configured.Attendees || pickerValues?.Attendees,
-        true
-      );
-      formData.TimeOff = toPerson(
-        configured.TimeOff || pickerValues?.TimeOff,
-        true
-      );
-      formData.Presenter = toPerson(
-        configured.Presenter || pickerValues?.Presenter,
-        true
-      );
-      formData.EngagementParticipant = toPerson(
-        configured.EngagementParticipant || pickerValues?.EngagementParticipant,
-        true
-      );
+      MainApplication.NewNoteComponent.assignPersonFields(formData, people, pickerValues);
 
       formData.Absentees = JSON.stringify(formData.Absentees || []);
       formData.Agenda = JSON.stringify(formData.Agenda || []);

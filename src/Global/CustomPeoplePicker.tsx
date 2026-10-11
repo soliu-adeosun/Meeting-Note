@@ -31,7 +31,7 @@ export default class CustomPeoplePicker extends React.Component<ICustomPeoplePic
     const selectionOrder = this.props["disable-selection-order"] || "false";
     //specifies if a sharepoint user is return or an email is returned via speed.bind().
     const getControlValuetype = this.props["get-control-value-type"] || "people";
-    const validationmsg = this.props["validation-msg"] || "please select a person";
+    const validationmsg = this.props["validation-msg"] || "Please select a person";
     return (
       <select
         id={customId}

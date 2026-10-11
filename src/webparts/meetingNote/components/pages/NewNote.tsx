@@ -49,7 +49,6 @@ export default class NewNote extends React.Component<{}, {}> {
                   <label className="AdrField">
                     <span className="meeting-date-label">
                       Start Time / End Time
-                      <span className="required">*</span>
                     </span>
                     <div className="time-pair">
                       <input type="time" id="start-time" />
@@ -60,7 +59,6 @@ export default class NewNote extends React.Component<{}, {}> {
                   <label className="AdrField">
                     <span className="meeting-date-label">
                       Time Keeper
-                      <span className="required">*</span>
                     </span>
                     <CustomPeoplePicker
                         validate-control="false"
@@ -80,6 +78,7 @@ export default class NewNote extends React.Component<{}, {}> {
                       <CustomPeoplePicker
                         validate-control="true"
                         custom-people="Attendees"
+                        validation-msg="Please select attendees"
                         multiple
                       />
                     </div>
@@ -91,6 +90,7 @@ export default class NewNote extends React.Component<{}, {}> {
                        <CustomPeoplePicker
                         validate-control="false"
                         custom-people="TimeOff"
+                        validation-msg="Please select a time-off participant"
                         multiple
                       />
                     </div>
@@ -135,7 +135,7 @@ export default class NewNote extends React.Component<{}, {}> {
                          <CustomPeoplePicker
                             validate-control="true"
                             custom-people="Presenter"
-                            speed-validate-msg="Please select a presenter"
+                            validation-msg="Please select a presenter"
                             multiple
                           />
                       </div>
@@ -148,7 +148,6 @@ export default class NewNote extends React.Component<{}, {}> {
                          <CustomPeoplePicker
                             validate-control="false"
                             custom-people="EngagementParticipant"
-                            speed-validate-msg="Please select engagement participants"
                             multiple
                           />
                       </div>
@@ -243,7 +242,7 @@ export default class NewNote extends React.Component<{}, {}> {
                     <div className="ai-modal-body">
                       <div className="ai-form-grid">
                         <label className="ai-field">
-                          <span>Assign to</span>
+                          <span>Assign to <span className="required">*</span></span>
                           <select id="action-type" className="form-select">
                             <option value="">Select type…</option>
                             <option value="Division">Division</option>
@@ -251,7 +250,7 @@ export default class NewNote extends React.Component<{}, {}> {
                           </select>
                         </label>
                         <label className="ai-field">
-                          <span>Assignee</span>
+                          <span>Assignee <span className="required">*</span></span>
                           <div id="action-assignee-container">
                             <select id="action-assignee" className="form-select" disabled>
                               <option value="">Select type first…</option>
@@ -259,11 +258,11 @@ export default class NewNote extends React.Component<{}, {}> {
                           </div>
                         </label>
                         <label className="ai-field ai-field-full">
-                          <span>Task</span>
+                          <span>Task <span className="required">*</span></span>
                           <textarea id="action-task" rows={3} placeholder="What needs to be done?" />
                         </label>
                         <label className="ai-field">
-                          <span>Due date</span>
+                          <span>Due date <span className="required">*</span></span>
                           <input type="date" id="action-due-date" />
                         </label>
                         <label className="ai-field ai-field-full">

@@ -909,7 +909,7 @@ MainApplication.textColumn = function (field) {
                 id="${$spcontext.uniqueIdGenerator()}"
                 type="text"
                 placeholder="Enter text"
-                speed-bind-validate="TempData"
+                speed-bind="TempData"
                 speed-as-static="true"
                 class="form-control no-border-radius speed-table-include"
                 value="${valueToEva[field] || ""}"
@@ -924,7 +924,7 @@ MainApplication.textAreaColumn = function (field) {
             <textarea
                 id="${$spcontext.uniqueIdGenerator()}"
                 placeholder="Enter text"
-                speed-bind-validate="TempData"
+                speed-bind="TempData"
                 speed-as-static="true"
                 row="4"
                 class="form-control no-border-radius speed-table-include"
@@ -950,7 +950,7 @@ MainApplication.selectColumn = function (field) {
     return `
       <select
         id="${$spcontext.uniqueIdGenerator()}"
-        speed-bind-validate="TempData"
+        speed-bind="TempData"
         speed-as-static="true"
         class="form-control no-border-radius speed-table-include"
       >

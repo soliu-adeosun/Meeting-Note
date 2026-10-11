@@ -188,7 +188,14 @@ PeoplePicker.getValue = function (customAttr = "custom-people") {
             }
           }
       } else {
-        results[pickerId] = (valueType === "people") ? SP.FieldUserValue.fromUser(selected) : selected;
+        // single select
+        if (selected == null || selected === "") {
+          results[pickerId] = null;
+        } else if (valueType === "people") {
+          results[pickerId] = SP.FieldUserValue.fromUser(selected);
+        } else {
+          results[pickerId] = selected;
+        }
       }
   });
 
