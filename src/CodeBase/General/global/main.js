@@ -720,7 +720,7 @@ MainApplication.DateConstraints = {
   },
 
   /**
-   * Apply global rules to any date input:
+   * Apply global rules to generic date inputs (e.g. action due dates):
    * - no past dates
    * - no weekends (clears + warns if user picks one)
    */
@@ -729,6 +729,7 @@ MainApplication.DateConstraints = {
 
     // Block past dates
     input.min = this.todayISO();
+    input.removeAttribute("max");
 
     const enforce = () => {
       if (!input.value) return;
@@ -743,6 +744,35 @@ MainApplication.DateConstraints = {
         input.value = "";
         MainApplication.notyf?.error?.(
           "Weekends are not allowed. Please choose a weekday.",
+        );
+      }
+    };
+
+    input.addEventListener("change", enforce);
+    input.addEventListener("input", enforce);
+  },
+
+  /**
+   * MeetingDate rules:
+   * - past and today are allowed
+   * - future dates are not selectable (max = today)
+   */
+  applyMeetingDateRules(input) {
+    if (!input || input.type !== "date") return;
+
+    input.removeAttribute("min");
+    input.max = this.todayISO();
+
+    const enforce = () => {
+      // Keep max in sync in case the page stays open past midnight
+      input.max = this.todayISO();
+
+      if (!input.value) return;
+
+      if (input.value > this.todayISO()) {
+        input.value = "";
+        MainApplication.notyf?.error?.(
+          "Future dates are not allowed. Please choose today or a past date.",
         );
       }
     };
@@ -794,10 +824,20 @@ MainApplication.DateConstraints = {
     sync();
   },
 
-  /** Apply basic rules to every date input currently in the DOM */
+  /** Apply the right rules to every date input currently in the DOM */
   applyToAllDateInputs(root = document) {
     root.querySelectorAll('input[type="date"]').forEach((input) => {
-      this.applyBasicRules(input);
+      var bindName =
+        input.getAttribute("speed-bind-validate") ||
+        input.getAttribute("speed-bind") ||
+        input.id ||
+        "";
+
+      if (bindName === "MeetingDate") {
+        this.applyMeetingDateRules(input);
+      } else {
+        this.applyBasicRules(input);
+      }
     });
   },
 };

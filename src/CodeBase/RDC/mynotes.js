@@ -34,17 +34,19 @@ whenMyNotesDependeciesLoaded = function () {
 
   speedctxRoot.DataForTable.propertiesHandler = {
     ReferenceID: function (valueToEva) {
+      var id = valueToEva.ReferenceID || "";
       var viewStr =
         '<a class="brown-anchor" title="View Meeting Note" href="#/viewnote?itemId=' +
-        valueToEva.ReferenceID +
+        id +
         '">' +
-        valueToEva.ReferenceID +
+        id +
         "</a>";
+      // Drafts open on the home page (New Meeting Note) for editing
       var editStr =
-        '<a class="brown-anchor" title="Edit Meeting Note" href="#/newmeetingnote?itemId=' +
-        valueToEva.ReferenceID +
-        '">' +
-        valueToEva.ReferenceID +
+        '<a class="brown-anchor" title="Edit Draft" href="#/?itemId=' +
+        id +
+        '&mode=editdraft">' +
+        id +
         "</a>";
 
       if (valueToEva.Status === "Submitted") {

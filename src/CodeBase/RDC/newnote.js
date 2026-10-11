@@ -56,14 +56,35 @@ function whenNewNoteDependeciesLoaded() {
 
   MainApplication.renderMeetingCategory();
   MainApplication.DateConstraints.applyToAllDateInputs();
+  MainApplication.DateConstraints.applyMeetingDateRules();
   MainApplication.NewNoteComponent.bindMeetingDate();
   MainApplication.NewNoteComponent.prepareAllTables();
 
-  AppRequest.itemId = $spcontext.getParameterByName(
-    "itemid",
-    window.location.href,
-  );
-  AppRequest.mode = $spcontext.getParameterByName("mode", window.location.href);
+  // Support both hash query shapes: #/?itemId=… and #/newmeetingnote?itemid=…
+  AppRequest.itemId =
+    $spcontext.getParameterByName("itemid", window.location.href) ||
+    $spcontext.getParameterByName("itemId", window.location.href) ||
+    null;
+  // Fallback: parse the hash search string (HashRouter keeps query after #)
+  if (!AppRequest.itemId) {
+    try {
+      var hash = window.location.hash || "";
+      var q = hash.indexOf("?") > -1 ? hash.split("?")[1] : "";
+      var params = new URLSearchParams(q);
+      AppRequest.itemId = params.get("itemId") || params.get("itemid");
+    } catch (e) {}
+  }
+  AppRequest.mode =
+    $spcontext.getParameterByName("mode", window.location.href) ||
+    (function () {
+      try {
+        var h = window.location.hash || "";
+        var qq = h.indexOf("?") > -1 ? h.split("?")[1] : "";
+        return new URLSearchParams(qq).get("mode");
+      } catch (e) {
+        return null;
+      }
+    })();
 
   customWorkflowEngine = new WorkflowManagerEngine(CurrentUserProperties);
   globalDefinitions.SetWorkflowRouting(customWorkflowEngine);
@@ -144,6 +165,11 @@ function whenNewNoteDependeciesLoaded() {
 
       if (!task) {
         globalDefinitions.HandlerError("Please fill the Task space.");
+        return;
+      }
+
+      if (!dueDate) {
+        globalDefinitions.HandlerError("Please select a due date.");
         return;
       }
 
@@ -262,6 +288,120 @@ MainApplication.NewNoteComponent.hydrateDynamicTables = function (savedData) {
 
   MainApplication.bindDeleteEvents();
   $spcontext.applyValidationEvents();
+};
+
+
+/**
+ * Reset the entire New Meeting Note form to a blank state.
+ * - Simple fields: $spcontext.resetBind() / rresetBind()
+ * - People pickers: PeoplePicker.resetAll()
+ * - Action items list: clear AppRequest.actionItems + re-render
+ * - Dynamic tables (Absentees / Agenda / Discussion): remove all rows,
+ *   then leave a single empty starter row
+ * - Times, week badge, draft itemId/mode
+ */
+MainApplication.NewNoteComponent.clearForm = function () {
+  var component = MainApplication.NewNoteComponent;
+
+  // 1) Simple speed-bind / speed-bind-validate fields
+  try {
+    $spcontext.resetBind();
+  } catch (e) {
+    console.warn("resetBind failed", e);
+  }
+
+  // 2) People pickers
+  try {
+    if (typeof PeoplePicker !== "undefined" && PeoplePicker.resetAll) {
+      PeoplePicker.resetAll();
+    }
+  } catch (e) {
+    console.warn("PeoplePicker.resetAll failed", e);
+  }
+
+  // 3) Fields that are not speed-bound
+  $("#start-time").val("");
+  $("#end-time").val("").removeAttr("min");
+  $("#week-number").text("");
+  $(".meeting-date-label .week, .hide-week").addClass("hide-week");
+  $("#duration").text("0");
+  $("#duration-container").addClass("hide-week");
+
+  // Meeting type secondary selector (if present)
+  $("#meeting-type-container").addClass("hidden").empty();
+  $("#meeting-category").val("").trigger("change");
+
+  // 4) Action items (modal list — not a Speed dynamic table)
+  if (AppRequest) {
+    AppRequest.actionItems = [];
+    AppRequest.itemId = null;
+    AppRequest.mode = null;
+  }
+  component.editingActionIndex = null;
+  if (typeof component.closeActionModal === "function") {
+    component.closeActionModal();
+  }
+  if (typeof component.renderActionItems === "function") {
+    component.renderActionItems();
+  }
+
+  // 5) Dynamic tables: wipe rows, then one blank row each
+  component.resetDynamicTables();
+
+  // 6) Clear validation error chrome if any
+  try {
+    $(".speed-error, .has-error").removeClass("speed-error has-error");
+    $(".error-msg, .speed-validate-msg").remove();
+  } catch (e) {}
+
+  // 7) Strip itemId/mode from the hash so we are truly on a blank "new" URL
+  try {
+    var hash = window.location.hash || "#/";
+    var path = hash.split("?")[0] || "#/";
+    if (hash.indexOf("itemId=") > -1 || hash.indexOf("itemid=") > -1 || hash.indexOf("mode=") > -1) {
+      if (window.history && window.history.replaceState) {
+        var base = window.location.href.split("#")[0];
+        window.history.replaceState(null, "", base + path);
+      } else {
+        window.location.hash = path;
+      }
+    }
+  } catch (e) {}
+};
+
+/**
+ * Remove every row from Absentees / Agenda / Discussion, then add one empty row.
+ * Mirrors the approach used in hydrateDynamicTables when rebuilding from saved data.
+ */
+MainApplication.NewNoteComponent.resetDynamicTables = function () {
+  if (!AppRequest || !AppRequest.tableCtxRegistry) return;
+
+  var tables = ["Absentees", "Agenda", "Discussion"];
+
+  tables.forEach(function (tableName) {
+    var ctx = AppRequest.tableCtxRegistry[tableName];
+    var root = AppRequest.tableRootRegistry && AppRequest.tableRootRegistry[tableName];
+    if (!ctx || !root) return;
+
+    var settings =
+      ctx.dynamicTableSettings && ctx.dynamicTableSettings[tableName];
+    if (!settings) return;
+
+    // Delete from the top until the tbody is empty
+    var guard = 0;
+    while ($("#" + root).children("tr").length > 0 && guard < 200) {
+      MainApplication.deleteTableRow(ctx, 0, tableName);
+      guard++;
+    }
+
+    // One blank starter row
+    MainApplication.addTableRow(ctx, tableName);
+  });
+
+  MainApplication.bindDeleteEvents();
+  try {
+    $spcontext.applyValidationEvents();
+  } catch (e) {}
 };
 
 // Form submission processes
@@ -454,6 +594,7 @@ MainApplication.NewNoteComponent.proceedToList = function (formData) {
 
   // Handle completion after the parent and any required tasks are saved
   const finishRequest = function () {
+      MainApplication.NewNoteComponent.clearForm();
     if (isSubmit) {
       globalDefinitions.HandlerSuccess("Note created successfully");
 

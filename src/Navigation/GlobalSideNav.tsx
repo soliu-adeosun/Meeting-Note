@@ -67,14 +67,20 @@ const NavIcon: React.FC<{name: IconName}> = ({name}) => {
 };
 
 const NAV_ITEMS: {path: string; label: string; icon: IconName}[] = [
-    {path: "/", label: "View Meeting Tasks", icon: "task"},
-    {path: "/newmeetingnote", label: "New Meeting Note", icon: "new"},
+    {path: "/", label: "New Meeting Note", icon: "new"},
     {path: "/mynotes", label: "Meeting Notes", icon: "form"},
+    {path: "/meetingtasks", label: "View Meeting Tasks", icon: "task"},
+    
 ];
 
 const GlobalSideNav: React.FC<GlobalSideNavProps> = ({isOpen, onClose}) => {
     const location = useLocation();
-    const isActive = (path: string): boolean => location.pathname === path;
+    const isActive = (path: string): boolean => {
+        if (path === "/") {
+            return location.pathname === "/" || location.pathname === "/newmeetingnote";
+        }
+        return location.pathname === path;
+    };
 
     return (
         <>

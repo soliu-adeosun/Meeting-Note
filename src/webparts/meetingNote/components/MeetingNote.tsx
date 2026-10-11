@@ -34,8 +34,11 @@ export default class AppDev extends React.Component<IMeetingNoteProps> {
           <HashRouter>
               <Routes>
                   <Route path="/" element={<Layout />}>
-                        <Route index element={<MeetingTasks />} />
+                        {/* Home = New Meeting Note */}
+                        <Route index element={<NewNote />} />
+                        {/* Keep old path as alias so existing links still work */}
                         <Route path="newmeetingnote" element={<NewNote />} />
+                        <Route path="meetingtasks" element={<MeetingTasks />} />
                         <Route path="previousnotes" element={<Navigate to="/mynotes?tab=previous" replace />} />
                         <Route path="mynotes" element={<MyNotes />} />
                         <Route path="viewnote" element={<ViewNote />} />

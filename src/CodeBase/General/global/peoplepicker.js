@@ -261,27 +261,59 @@ PeoplePicker.disablePicker = function (pickerId) {
   $picker.select2('enable', false);
 };
 
+/**
+ * Clear one people picker (single or multi).
+ * Select2 single-select often keeps showing the previous choice if we only
+ * set val(null) and strip the blank option — ensure a placeholder option
+ * exists and force a Select2-aware change event.
+ */
 PeoplePicker.reset = function (pickerId) {
   const $picker = $(`[custom-people="${pickerId}"]`);
   if (!$picker.length) return;
-
-  const isMultiple = $picker.prop("multiple");
-  $picker.val(isMultiple ? [] : null).trigger("change");
-
-  $picker.find('option').filter(function () {
-    return !this.value; // catches "" or undefined
-  }).remove();
+  PeoplePicker._clearPicker($picker, pickerId);
 };
 
 PeoplePicker.resetAll = function (attr = "custom-people") {
   const pickers = document.querySelectorAll(`[${attr}]`);
-  pickers.forEach(picker => {
+  pickers.forEach(function (picker) {
     const $picker = $(picker);
-    const isMultiple = $picker.prop("multiple");
-    $picker.val(isMultiple ? [] : null).trigger("change");
-
-    $picker.find('option').filter(function () {
-      return !this.value;
-    }).remove();
+    const pickerId = picker.getAttribute(attr);
+    PeoplePicker._clearPicker($picker, pickerId);
   });
+};
+
+PeoplePicker._clearPicker = function ($picker, pickerId) {
+  if (!$picker || !$picker.length) return;
+
+  const isMultiple = !!$picker.prop("multiple");
+
+  // Drop any remembered default so a later re-init does not re-select it
+  if (pickerId && PeoplePicker.defaultValues) {
+    delete PeoplePicker.defaultValues[pickerId];
+  }
+
+  if (isMultiple) {
+    $picker.val([]).trigger("change");
+  } else {
+    // Select2 single needs an empty <option> for a true cleared/placeholder state
+    var $blank = $picker.find('option').filter(function () {
+      return this.value === "" || this.value == null;
+    });
+    if (!$blank.length) {
+      $picker.prepend('<option value=""></option>');
+    } else {
+      // Keep a single blank option at the top
+      $blank.slice(1).remove();
+    }
+
+    // Prefer "" over null — more reliable with Select2 4.x single selects
+    $picker.val("").trigger("change");
+  }
+
+  // Force Select2 UI to refresh even if the underlying value looked unchanged
+  if ($picker.data("select2")) {
+    try {
+      $picker.trigger("change.select2");
+    } catch (e) {}
+  }
 };

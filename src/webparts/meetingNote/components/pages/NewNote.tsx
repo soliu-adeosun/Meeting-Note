@@ -41,8 +41,6 @@ export default class NewNote extends React.Component<{}, {}> {
                     <select id="meeting-category" speed-bind-validate="MeetingCategory">
                     </select>
                     <div className="hidden top-space" id="meeting-type-container">
-                      {/* <select id="meeting-type-selector" speed-bind-validate="MeetingType">
-                      </select> */}
                     </div>
                   </label>
                 </div>
@@ -80,7 +78,7 @@ export default class NewNote extends React.Component<{}, {}> {
                     <div className="card-head">Attendance</div>
                     <div className="card-body person-list">
                       <CustomPeoplePicker
-                        validate-control="false"
+                        validate-control="true"
                         custom-people="Attendees"
                         multiple
                       />
@@ -108,7 +106,7 @@ export default class NewNote extends React.Component<{}, {}> {
                         className="AdrTable"
                         id="absentees-table"
                         speed-json="false"
-                        speed-validate-mode="true"
+                        speed-validate-mode="false"
                         speed-bind-table="Absentees"
                         speed-bind-auto="false"
                       >
@@ -297,9 +295,14 @@ export default class NewNote extends React.Component<{}, {}> {
 
 
             <div className="AdrFormActions">
-              <a href="#/" className="AdrSecondaryButton" type="button">
-                Cancel
-              </a>
+              <ClientButton
+                func="NewNoteComponent.clearForm"
+                clax="AdrSecondaryButton"
+                prop="Clear Form"
+                attr=""
+              >
+                Clear Form
+              </ClientButton>
               <ClientButton
                 func="NewNoteComponent.confirmSubmit"
                 clax="AdrSecondaryButton draftbtn"
