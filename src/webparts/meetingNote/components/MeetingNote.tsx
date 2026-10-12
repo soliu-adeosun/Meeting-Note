@@ -8,6 +8,8 @@ import MeetingTasks from './pages/MeetingTasks';
 import MyNotes from './pages/MyNotes';
 import ViewNote from './pages/ViewNote';
 import ViewTask from './pages/ViewTask';
+import AllNotes from "./pages/AllNotes";
+import AllTasks from "./pages/AllTasks";
 import { HelmetProvider } from "react-helmet-async";
 
 require('main');
@@ -21,6 +23,8 @@ declare global {
         loadMyNotesComponent: () => void;
         loadViewNoteComponent: () => void;
         loadViewTaskComponent: () => void;
+        loadAllNotesComponent: () => void;
+        loadAllTasksComponent: () => void;
     }
 }
 
@@ -43,6 +47,8 @@ export default class AppDev extends React.Component<IMeetingNoteProps> {
                         <Route path="mynotes" element={<MyNotes />} />
                         <Route path="viewnote" element={<ViewNote />} />
                         <Route path="viewtask" element={<ViewTask />} />
+                        <Route path="allnotes" element={<AllNotes />} />
+                        <Route path="alltasks" element={<AllTasks />} />
                   </Route>
               </Routes>
           </HashRouter>

@@ -185,6 +185,24 @@
         "speedpoint_core",
         "main"
       ]
+    },
+    "allnotes": {
+      "path": "src/codebase/rdc/allnotes.js",
+      "globalName": "allnotes",
+      "globalDependencies": [
+        "global",
+        "speedpoint_core",
+        "main"
+      ]
+    },
+    "alltasks": {
+      "path": "src/codebase/rdc/alltasks.js",
+      "globalName": "alltasks",
+      "globalDependencies": [
+        "global",
+        "speedpoint_core",
+        "main"
+      ]
     }
   },
   "localizedResources": {

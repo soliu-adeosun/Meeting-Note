@@ -78,6 +78,8 @@ function MainStartPoint() {
   this.MyNotesComponent = {};
   this.ViewNoteComponent = {};
   this.ViewTaskComponent = {};
+  this.AllNotesComponent = {};
+  this.AllTasksComponent = {};
 
   this.CurrentPageSubmitFunction = null;
   this.inspectionItems = [];
