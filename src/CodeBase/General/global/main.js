@@ -150,7 +150,8 @@ function whenLayoutLoaded() {
     globalDefinitions = new GlobalDefinitionsManager();
 
     // globalDefinitions.callLoader();
-    $("#reports").hide();
+    $("#allnotes").hide();
+    $("#alltasks").hide();
 
     window.globalProp
       .getClientIP()
@@ -473,7 +474,8 @@ function whenLayoutLoaded() {
         }
 
         if (MainApplication.isUserAnActor) {
-          $("#reports").show();
+          $("#allnotes").show();
+          $("#alltasks").show();
           // $("#adminView").show();
           // $(".adminPages").show();
           // $(".reviewNav").show();
