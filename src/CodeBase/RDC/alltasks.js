@@ -113,8 +113,6 @@ MainApplication.AllTasksComponent.retrieveAllTasks = function () {
     ],
   };
 
-  globalDefinitions.callLoader && globalDefinitions.callLoader();
-
   speedctxRoot.getListToItems(
     listName,
     query,

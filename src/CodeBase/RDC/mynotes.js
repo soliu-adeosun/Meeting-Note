@@ -8,8 +8,6 @@ loadMyNotesComponent = function () {
 
 var AppRequest;
 
-MainApplication.MyNotesComponent = MainApplication.MyNotesComponent || {};
-
 MainApplication.MyNotesComponent.ApplicationDetails = function () {
   this.fullTableData = [];
   this.dataForExport = [];
@@ -222,8 +220,6 @@ MainApplication.MyNotesComponent.retrieveMyNotes = function () {
     '</Where><OrderBy><FieldRef Name="Modified" Ascending="FALSE"/></OrderBy>' +
     "</Query></View>";
 
-  globalDefinitions.callLoader && globalDefinitions.callLoader();
-
   speedctxRoot.getListToItems(
     listName,
     query,
@@ -264,7 +260,6 @@ MainApplication.MyNotesComponent.retrievePreviousNotes = function () {
     '<OrderBy><FieldRef Name="Modified" Ascending="FALSE"/></OrderBy>' +
     "</Query></View>";
 
-  globalDefinitions.callLoader && globalDefinitions.callLoader();
 
   speedctxRoot.getListToItems(
     listName,

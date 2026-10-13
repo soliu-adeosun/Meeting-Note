@@ -119,8 +119,6 @@ MainApplication.AllNotesComponent.retrieveAllNotes = function () {
     '<OrderBy><FieldRef Name="Modified" Ascending="FALSE"/></OrderBy>' +
     "</Query></View>";
 
-  globalDefinitions.callLoader && globalDefinitions.callLoader();
-
   speedctxRoot.getListToItems(
     listName,
     query,
