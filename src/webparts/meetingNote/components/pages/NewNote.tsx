@@ -27,7 +27,7 @@ export default class NewNote extends React.Component<{}, {}> {
                         Week: <b id="week-number" speed-bind="MeetingWeek">32</b>
                       </span>
                     </span>
-                    <input type="date" speed-bind-validate="MeetingDate" />
+                    <input type="date" speed-bind-validate="MeetingDate" speed-validate-msg="Please select the meeting date" />
                   </label>
 
                   <label className="AdrField">
@@ -38,7 +38,7 @@ export default class NewNote extends React.Component<{}, {}> {
                         Required Time: <b id="duration" speed-bind="RequiredTime">0</b>
                       </span>
                     </span>
-                    <select id="meeting-category" speed-bind-validate="MeetingCategory">
+                    <select id="meeting-category" speed-bind-validate="MeetingCategory" speed-validate-msg="Please select the meeting type">
                     </select>
                     <div className="hidden top-space" id="meeting-type-container">
                     </div>

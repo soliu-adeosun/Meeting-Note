@@ -438,24 +438,31 @@ MainApplication.NewNoteComponent.toPersonField = function (emails, multiple) {
 
   function isEmptyPerson(v) {
     if (v == null || v === "") return true;
+    // Arrays are handled by the caller item-by-item — never treat the array as one person
+    if (Array.isArray(v)) return false;
     if (typeof v === "object") {
-      // JSOM FieldUserValue internals / common shapes
       var login =
-        v.$GN_1 != null ? v.$GN_1 :
-        v.get_lookupValue ? v.get_lookupValue() :
-        v.Key || v.Email || v.LoginName || "";
+        v.$GN_1 != null
+          ? v.$GN_1
+          : v.get_lookupValue
+            ? v.get_lookupValue()
+            : v.Key || v.Email || v.LoginName || "";
       var id =
-        v.$62_1 != null ? v.$62_1 :
-        v.get_lookupId ? v.get_lookupId() :
-        v.Id;
+        v.$62_1 != null
+          ? v.$62_1
+          : v.get_lookupId
+            ? v.get_lookupId()
+            : v.Id;
       if (String(login).trim() === "" || id === -1) return true;
     }
     return false;
   }
 
-  if (isEmptyPerson(emails)) {
-    return null;
-  }
+  // Empty / missing
+  if (emails == null || emails === "") return null;
+  if (Array.isArray(emails) && emails.length === 0) return null;
+  // Single empty FieldUserValue-style object
+  if (!Array.isArray(emails) && isEmptyPerson(emails)) return null;
 
   var list = Array.isArray(emails) ? emails : [emails];
   var values = [];
@@ -484,7 +491,11 @@ MainApplication.NewNoteComponent.toPersonField = function (emails, multiple) {
 };
 
 // helper: only set person fields when there is a real value
-MainApplication.NewNoteComponent.assignPersonFields = function (formData, configured, pickerValues) {
+MainApplication.NewNoteComponent.assignPersonFields = function (
+  formData,
+  configured,
+  pickerValues
+) {
   var toPerson = MainApplication.NewNoteComponent.toPersonField;
   var map = [
     { key: "TimeKeeper", multiple: false },
@@ -494,11 +505,17 @@ MainApplication.NewNoteComponent.assignPersonFields = function (formData, config
     { key: "EngagementParticipant", multiple: true },
   ];
 
+  function pickRaw(key) {
+    var c = configured && configured[key];
+    if (Array.isArray(c) && c.length > 0) return c;
+    if (c != null && c !== "" && !Array.isArray(c)) return c;
+    return pickerValues && pickerValues[key];
+  }
+
   map.forEach(function (f) {
-    var raw = (configured && configured[f.key]) || (pickerValues && pickerValues[f.key]);
-    var val = toPerson(raw, f.multiple);
+    var val = toPerson(pickRaw(f.key), f.multiple);
     if (val == null || (Array.isArray(val) && val.length === 0)) {
-      delete formData[f.key]; // omit empty optional / empty multi
+      delete formData[f.key];
     } else {
       formData[f.key] = val;
     }
@@ -548,34 +565,35 @@ MainApplication.NewNoteComponent.saveDataToList = function () {
 
 MainApplication.NewNoteComponent.saveDataToListAsDraft = function () {
   globalDefinitions.onActionClicked();
-  var formData = $spcontext.bind({}, "ProcessOverview") || {};
+  var formData = $spcontext.bind({}) || {};
   if ($spcontext.checkPassedValidation()) {
     formData = $spcontext.bind({});
     var pickerValues = PeoplePicker.getValue() || {};
     var people = PeoplePicker.getConfiguredValue() || {};
      try {
-      var toPerson = MainApplication.NewNoteComponent.toPersonField;
+      MainApplication.NewNoteComponent.assignPersonFields(formData, people, pickerValues);
+      // var toPerson = MainApplication.NewNoteComponent.toPersonField;
 
-      formData.TimeKeeper = toPerson(
-        people.TimeKeeper || pickerValues.TimeKeeper,
-        false
-      );
-      formData.Attendees = toPerson(
-        people.Attendees || pickerValues.Attendees,
-        true
-      );
-      formData.TimeOff = toPerson(
-        people.TimeOff || pickerValues.TimeOff,
-        true
-      );
-      formData.Presenter = toPerson(
-        people.Presenter || pickerValues.Presenter,
-        true
-      );
-      formData.EngagementParticipant = toPerson(
-        people.EngagementParticipant || pickerValues.EngagementParticipant,
-        true
-      );
+      // formData.TimeKeeper = toPerson(
+      //   people.TimeKeeper || pickerValues.TimeKeeper,
+      //   false
+      // );
+      // formData.Attendees = toPerson(
+      //   people.Attendees || pickerValues.Attendees,
+      //   true
+      // );
+      // formData.TimeOff = toPerson(
+      //   people.TimeOff || pickerValues.TimeOff,
+      //   true
+      // );
+      // formData.Presenter = toPerson(
+      //   people.Presenter || pickerValues.Presenter,
+      //   true
+      // );
+      // formData.EngagementParticipant = toPerson(
+      //   people.EngagementParticipant || pickerValues.EngagementParticipant,
+      //   true
+      // );
 
       formData.Absentees = JSON.stringify(formData.Absentees || []);
       formData.Agenda = JSON.stringify(formData.Agenda || []);
@@ -597,7 +615,7 @@ MainApplication.NewNoteComponent.saveDataToListAsDraft = function () {
     console.log("Data at SaveAsDraft: ", formData);
     MainApplication.NewNoteComponent.proceedToList(formData, false);
 } else {
-    globalDefinitions.HandlerError("Please fill the Process Overview part at least");
+    globalDefinitions.HandlerError("", true);
     globalDefinitions.onActionFailed();
 }
   // console.log("Form Data to be submitted:", formData);
