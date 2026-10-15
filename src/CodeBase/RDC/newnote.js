@@ -11,7 +11,6 @@ loadNewNoteComponent = function () {
 var AppRequest;
 var customWorkflowEngine;
 
-
 MainApplication.NewNoteComponent.ApplicationDetails = function () {
   this.url = window.location.href;
   this.itemId = null;
@@ -50,7 +49,8 @@ MainApplication.NewNoteComponent.ApplicationDetails = function () {
 function whenNewNoteDependeciesLoaded() {
   // globalDefinitions.callLoader();
   $spcontext.assignAttributes();
-  MainApplication.CurrentPageSubmitFunction = MainApplication.NewNoteComponent.confirmSubmit;
+  MainApplication.CurrentPageSubmitFunction =
+    MainApplication.NewNoteComponent.confirmSubmit;
   AppRequest = new MainApplication.NewNoteComponent.ApplicationDetails();
   globalDefinitions.extendStages();
 
@@ -89,7 +89,9 @@ function whenNewNoteDependeciesLoaded() {
 
   customWorkflowEngine = new WorkflowManagerEngine(CurrentUserProperties);
   globalDefinitions.SetWorkflowRouting(customWorkflowEngine);
-  customWorkflowEngine.routeEngine(customWorkflowEngine).setCurrentUserAsInitiator();
+  customWorkflowEngine
+    .routeEngine(customWorkflowEngine)
+    .setCurrentUserAsInitiator();
 
   PeoplePicker.defaultValues = {};
   PeoplePicker.initializePeoplePickers(MainApplication.staffList);
@@ -125,14 +127,14 @@ function whenNewNoteDependeciesLoaded() {
   $(document)
     .off(
       "click.nnCloseActionModal",
-      "#close-action-modal, #cancel-action-modal, #action-modal-backdrop"
+      "#close-action-modal, #cancel-action-modal, #action-modal-backdrop",
     )
     .on(
       "click.nnCloseActionModal",
       "#close-action-modal, #cancel-action-modal, #action-modal-backdrop",
       function () {
         MainApplication.NewNoteComponent.closeActionModal();
-      }
+      },
     );
 
   $(document)
@@ -159,7 +161,7 @@ function whenNewNoteDependeciesLoaded() {
 
       if (!$assignee.length || !$assignee.val()) {
         globalDefinitions.HandlerError(
-          "Please select a division or staff member."
+          "Please select a division or staff member.",
         );
         return;
       }
@@ -217,39 +219,37 @@ function whenNewNoteDependeciesLoaded() {
 
   setTimeout(function () {
     if (AppRequest.itemId !== null && AppRequest.itemId !== "") {
-        MainApplication.NewNoteComponent.recoverListData();
+      MainApplication.NewNoteComponent.recoverListData();
     }
     $("#newLoader").hide();
     $("#newrequest-page").removeClass("hidden");
     globalDefinitions.closeLoader();
   }, 1000);
-  
 }
-
 
 // stringnifyDate only ever outputs day-month-year, regardless of what
 // format string you pass it - this reorders that into yyyy-mm-dd so it
 // survives being dropped into an <input type="date">. Handles both "-"
 // and "/" separators and 2- or 4-digit years.
 MainApplication.NewNoteComponent.toISODateInput = function (rawValue) {
-    if (!rawValue) {
-        return "";
-    }
+  if (!rawValue) {
+    return "";
+  }
 
-    var parts = rawValue.split(/[-\/]/);
-    if (parts.length !== 3) {
-        return "";
-    }
+  var parts = rawValue.split(/[-\/]/);
+  if (parts.length !== 3) {
+    return "";
+  }
 
-    var day = parts[0].padStart(2, "0");
-    var month = parts[1].padStart(2, "0");
-    var year = parts[2];
+  var day = parts[0].padStart(2, "0");
+  var month = parts[1].padStart(2, "0");
+  var year = parts[2];
 
-    if (year.length === 2) {
-        year = (Number(year) < 70 ? "20" : "19") + year;
-    }
+  if (year.length === 2) {
+    year = (Number(year) < 70 ? "20" : "19") + year;
+  }
 
-    return `${year}-${month}-${day}`;
+  return `${year}-${month}-${day}`;
 };
 
 MainApplication.NewNoteComponent.hydrateDynamicTables = function (savedData) {
@@ -275,7 +275,9 @@ MainApplication.NewNoteComponent.hydrateDynamicTables = function (savedData) {
     rows.forEach(function (rowData) {
       settings.addRow();
 
-      var $row = $("#" + root).children("tr").last();
+      var $row = $("#" + root)
+        .children("tr")
+        .last();
       var $inputs = $row.find(".speed-table-include");
 
       fieldOrder.forEach(function (fieldName, index) {
@@ -290,7 +292,6 @@ MainApplication.NewNoteComponent.hydrateDynamicTables = function (savedData) {
   MainApplication.bindDeleteEvents();
   $spcontext.applyValidationEvents();
 };
-
 
 /**
  * Reset the entire New Meeting Note form to a blank state.
@@ -359,7 +360,11 @@ MainApplication.NewNoteComponent.clearForm = function () {
   try {
     var hash = window.location.hash || "#/";
     var path = hash.split("?")[0] || "#/";
-    if (hash.indexOf("itemId=") > -1 || hash.indexOf("itemid=") > -1 || hash.indexOf("mode=") > -1) {
+    if (
+      hash.indexOf("itemId=") > -1 ||
+      hash.indexOf("itemid=") > -1 ||
+      hash.indexOf("mode=") > -1
+    ) {
       if (window.history && window.history.replaceState) {
         var base = window.location.href.split("#")[0];
         window.history.replaceState(null, "", base + path);
@@ -381,7 +386,8 @@ MainApplication.NewNoteComponent.resetDynamicTables = function () {
 
   tables.forEach(function (tableName) {
     var ctx = AppRequest.tableCtxRegistry[tableName];
-    var root = AppRequest.tableRootRegistry && AppRequest.tableRootRegistry[tableName];
+    var root =
+      AppRequest.tableRootRegistry && AppRequest.tableRootRegistry[tableName];
     if (!ctx || !root) return;
 
     var settings =
@@ -408,25 +414,27 @@ MainApplication.NewNoteComponent.resetDynamicTables = function () {
 // Form submission processes
 MainApplication.NewNoteComponent.confirmSubmit = function (action) {
   if (action === "Draft") {
-      MainApplication.confirmAction = MainApplication.NewNoteComponent.saveConfirmed;
-      $("#confirmModal").modal("show");
-      console.log(action);
+    MainApplication.confirmAction =
+      MainApplication.NewNoteComponent.saveConfirmed;
+    $("#confirmModal").modal("show");
+    console.log(action);
   } else {
-      MainApplication.confirmAction = MainApplication.NewNoteComponent.actionConfirmed;
-      $("#confirmModal").modal("show");
-      console.log(action);
+    MainApplication.confirmAction =
+      MainApplication.NewNoteComponent.actionConfirmed;
+    $("#confirmModal").modal("show");
+    console.log(action);
   }
 
   AppRequest.actionTaken = action;
-}
+};
 
 MainApplication.NewNoteComponent.actionConfirmed = function () {
   MainApplication.NewNoteComponent.saveDataToList();
 };
 
 MainApplication.NewNoteComponent.saveConfirmed = function () {
-    MainApplication.NewNoteComponent.saveDataToListAsDraft();
-}
+  MainApplication.NewNoteComponent.saveDataToListAsDraft();
+};
 
 /**
  * Build SharePoint person field value(s) from email(s).
@@ -448,11 +456,7 @@ MainApplication.NewNoteComponent.toPersonField = function (emails, multiple) {
             ? v.get_lookupValue()
             : v.Key || v.Email || v.LoginName || "";
       var id =
-        v.$62_1 != null
-          ? v.$62_1
-          : v.get_lookupId
-            ? v.get_lookupId()
-            : v.Id;
+        v.$62_1 != null ? v.$62_1 : v.get_lookupId ? v.get_lookupId() : v.Id;
       if (String(login).trim() === "" || id === -1) return true;
     }
     return false;
@@ -494,7 +498,7 @@ MainApplication.NewNoteComponent.toPersonField = function (emails, multiple) {
 MainApplication.NewNoteComponent.assignPersonFields = function (
   formData,
   configured,
-  pickerValues
+  pickerValues,
 ) {
   var toPerson = MainApplication.NewNoteComponent.toPersonField;
   var map = [
@@ -529,13 +533,15 @@ MainApplication.NewNoteComponent.saveDataToList = function () {
   var pickerValues = PeoplePicker.getValue() || {};
   var people = PeoplePicker.getConfiguredValue() || {};
 
-
   if ($spcontext.checkPassedValidation()) {
-
     try {
       // Person columns need SP.FieldUserValue, not email JSON strings.
       // Prefer getConfiguredValue() (plain emails) then convert.
-      MainApplication.NewNoteComponent.assignPersonFields(formData, people, pickerValues);
+      MainApplication.NewNoteComponent.assignPersonFields(
+        formData,
+        people,
+        pickerValues,
+      );
 
       formData.Absentees = JSON.stringify(formData.Absentees || []);
       formData.Agenda = JSON.stringify(formData.Agenda || []);
@@ -547,12 +553,11 @@ MainApplication.NewNoteComponent.saveDataToList = function () {
       formData.EndTime = $("#end-time").val();
     } catch (error) {
       console.error("saveDataToList field prep failed:", error);
-    };
-    
+    }
+
     formData.Reporter = CurrentUserProperties.title;
     formData.Status = "Submitted";
     formData.Title = formData.MeetingType + " - Week " + formData.MeetingWeek;
-
 
     globalDefinitions.onActionCompleted();
     MainApplication.NewNoteComponent.proceedToList(formData, false);
@@ -570,8 +575,12 @@ MainApplication.NewNoteComponent.saveDataToListAsDraft = function () {
     formData = $spcontext.bind({});
     var pickerValues = PeoplePicker.getValue() || {};
     var people = PeoplePicker.getConfiguredValue() || {};
-     try {
-      MainApplication.NewNoteComponent.assignPersonFields(formData, people, pickerValues);
+    try {
+      MainApplication.NewNoteComponent.assignPersonFields(
+        formData,
+        people,
+        pickerValues,
+      );
       // var toPerson = MainApplication.NewNoteComponent.toPersonField;
 
       // formData.TimeKeeper = toPerson(
@@ -605,8 +614,8 @@ MainApplication.NewNoteComponent.saveDataToListAsDraft = function () {
       formData.EndTime = $("#end-time").val();
     } catch (error) {
       console.error("saveDataToListAsDraft field prep failed:", error);
-    };
-    
+    }
+
     formData.Reporter = CurrentUserProperties.title;
     formData.Title = formData.MeetingType + " - Week " + formData.MeetingWeek;
     formData.Status = "Draft";
@@ -614,12 +623,12 @@ MainApplication.NewNoteComponent.saveDataToListAsDraft = function () {
 
     console.log("Data at SaveAsDraft: ", formData);
     MainApplication.NewNoteComponent.proceedToList(formData, false);
-} else {
+  } else {
     globalDefinitions.HandlerError("", true);
     globalDefinitions.onActionFailed();
-}
+  }
   // console.log("Form Data to be submitted:", formData);
-}
+};
 
 MainApplication.NewNoteComponent.proceedToList = function (formData) {
   const component = MainApplication.NewNoteComponent;
@@ -627,18 +636,18 @@ MainApplication.NewNoteComponent.proceedToList = function (formData) {
 
   // Handle completion after the parent and any required tasks are saved
   const finishRequest = function () {
-      MainApplication.NewNoteComponent.clearForm();
+    MainApplication.NewNoteComponent.clearForm();
     if (isSubmit) {
       globalDefinitions.HandlerSuccess("Note created successfully");
 
       globalDefinitions.AuditLogManager_SaveLog({
-        Action: `Submitted Note ${formData.ReferenceID}`
+        Action: `Submitted Note ${formData.ReferenceID}`,
       });
     } else {
       globalDefinitions.HandlerSuccess("Note saved as draft successfully");
 
       globalDefinitions.AuditLogManager_SaveLog({
-        Action: `Saved Note ${formData.ReferenceID}`
+        Action: `Saved Note ${formData.ReferenceID}`,
       });
     }
 
@@ -663,7 +672,7 @@ MainApplication.NewNoteComponent.proceedToList = function (formData) {
     var dateCreatedCode = $spcontext.stringnifyDate({
       includeTime: true,
       timeSpace: false,
-      format: "dd-mm-yy"
+      format: "dd-mm-yy",
     });
 
     formData.ReferenceID =
@@ -676,7 +685,7 @@ MainApplication.NewNoteComponent.proceedToList = function (formData) {
       globalDefinitions.stageDefinitions.listname,
       function (createdItemsProperties) {
         saveTasksIfSubmitted();
-      }
+      },
     );
   } else {
     console.log("New data about to be updated:", formData);
@@ -692,7 +701,7 @@ MainApplication.NewNoteComponent.proceedToList = function (formData) {
       globalDefinitions.stageDefinitions.listname,
       function () {
         saveTasksIfSubmitted();
-      }
+      },
     );
   }
 };
@@ -741,10 +750,13 @@ MainApplication.NewNoteComponent.prepareAllTables = function () {
     bindExtensions: {
       discussion: MainApplication.textAreaColumn("discussion"),
 
-      action: MainApplication.deleteColumn(AppRequest.discussionCTX, "Discussion"),
+      action: MainApplication.deleteColumn(
+        AppRequest.discussionCTX,
+        "Discussion",
+      ),
     },
   });
-}
+};
 
 MainApplication.NewNoteComponent.getWeekNumber = function (date) {
   // Clone the date so we don't modify the original
@@ -789,15 +801,18 @@ MainApplication.NewNoteComponent.bindMeetingDate = function () {
 
 // Escape values before inserting them into HTML
 MainApplication.NewNoteComponent.escapeHtml = function (value) {
-  return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[char];
-  });
+  return String(value == null ? "" : value).replace(
+    /[&<>"']/g,
+    function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      }[char];
+    },
+  );
 };
 
 // Populate the assignee dropdown based on the selected type
@@ -811,9 +826,8 @@ MainApplication.NewNoteComponent.bindActionAssignee = function (type) {
 
   if (type === "Division") {
     (MainApplication.newDivisions || []).forEach(function (division) {
-      const name = typeof division === "string"
-        ? division
-        : division.Title || "";
+      const name =
+        typeof division === "string" ? division : division.Title || "";
 
       if (name) {
         options += `<option value="${MainApplication.NewNoteComponent.escapeHtml(name)}">${MainApplication.NewNoteComponent.escapeHtml(name)}</option>`;
@@ -841,14 +855,15 @@ MainApplication.NewNoteComponent.bindActionAssignee = function (type) {
 
 // Render the collected action items into the output table
 
-
 MainApplication.NewNoteComponent.openActionModal = function (editIndex) {
   const component = MainApplication.NewNoteComponent;
   component.editingActionIndex =
     typeof editIndex === "number" ? editIndex : null;
 
   const isEdit = component.editingActionIndex !== null;
-  $("#action-modal-title").text(isEdit ? "Edit Action Item" : "Add Action Item");
+  $("#action-modal-title").text(
+    isEdit ? "Edit Action Item" : "Add Action Item",
+  );
   $("#add-task-btn").text(isEdit ? "Update item" : "Add item");
 
   component.resetActionFormFields();
@@ -883,7 +898,7 @@ MainApplication.NewNoteComponent.closeActionModal = function () {
 MainApplication.NewNoteComponent.resetActionFormFields = function () {
   $("#action-type").val("");
   $("#action-assignee-container").html(
-    '<select id="action-assignee" class="form-select" disabled><option value="">Select type first…</option></select>'
+    '<select id="action-assignee" class="form-select" disabled><option value="">Select type first…</option></select>',
   );
   $("#action-task").val("");
   $("#action-due-date").val("");
@@ -901,7 +916,7 @@ MainApplication.NewNoteComponent.renderActionItems = function () {
 
   if (!items.length) {
     $container.html(
-      '<div class="ai-empty">No action items yet. Click <strong>+</strong> to add one.</div>'
+      '<div class="ai-empty">No action items yet. Click <strong>+</strong> to add one.</div>',
     );
     return;
   }
@@ -914,9 +929,7 @@ MainApplication.NewNoteComponent.renderActionItems = function () {
           <div class="ai-assignee-cell">
             <strong>${component.escapeHtml(item.Name)}</strong>
             <small>${component.escapeHtml(item.Type || "")}${
-              item.Email
-                ? " · " + component.escapeHtml(item.Email)
-                : ""
+              item.Email ? " · " + component.escapeHtml(item.Email) : ""
             }</small>
           </div>
         </td>
@@ -948,7 +961,7 @@ MainApplication.NewNoteComponent.renderActionItems = function () {
 
 MainApplication.NewNoteComponent.createMeetingTasks = function (
   formData,
-  callback
+  callback,
 ) {
   const actionItems = AppRequest.actionItems || [];
 
@@ -984,13 +997,12 @@ MainApplication.NewNoteComponent.createMeetingTasks = function (
       console.log("Meeting tasks created successfully:", createdTasks);
 
       if (callback) callback();
-    }
+    },
   );
 };
 
 MainApplication.NewNoteComponent.recoverListData = function () {
   if (AppRequest.itemId !== null && AppRequest.itemId !== "") {
-
     var query = speedctxRoot.camlBuilder([
       {
         rowlimit: 1,
@@ -1047,7 +1059,6 @@ MainApplication.NewNoteComponent.recoverListData = function () {
       query,
       extraProperties,
       function (listProperties) {
-
         if ($.isEmptyObject(listProperties)) {
           MainApplication.notyf.error("Process does not exist...");
           $spcontext.redirect("#/", false);
@@ -1065,24 +1076,21 @@ MainApplication.NewNoteComponent.recoverListData = function () {
 
         listProperties.Absentees =
           MainApplication.NewNoteComponent.parseSavedJSON(
-            listProperties.Absentees
+            listProperties.Absentees,
           );
 
-        listProperties.Agenda =
-          MainApplication.NewNoteComponent.parseSavedJSON(
-            listProperties.Agenda
-          );
+        listProperties.Agenda = MainApplication.NewNoteComponent.parseSavedJSON(
+          listProperties.Agenda,
+        );
 
         listProperties.Discussion =
           MainApplication.NewNoteComponent.parseSavedJSON(
-            listProperties.Discussion
+            listProperties.Discussion,
           );
 
-        listProperties.Tasks =
-          MainApplication.NewNoteComponent.parseSavedJSON(
-            listProperties.Tasks
-          );
-
+        listProperties.Tasks = MainApplication.NewNoteComponent.parseSavedJSON(
+          listProperties.Tasks,
+        );
 
         /*
          * ---------------------------------------------------------
@@ -1091,7 +1099,6 @@ MainApplication.NewNoteComponent.recoverListData = function () {
          */
 
         if (listProperties.MeetingDate) {
-
           var meetingDate = $spcontext.stringnifyDate({
             value: listProperties.MeetingDate,
             includeTime: false,
@@ -1099,9 +1106,7 @@ MainApplication.NewNoteComponent.recoverListData = function () {
           });
 
           listProperties.MeetingDate =
-            MainApplication.NewNoteComponent.toISODateInput(
-              meetingDate
-            );
+            MainApplication.NewNoteComponent.toISODateInput(meetingDate);
         }
 
         // listProperties.Absentees = $spcontext.JSONToObject(listProperties.Absentees);
@@ -1116,7 +1121,6 @@ MainApplication.NewNoteComponent.recoverListData = function () {
 
         AppRequest.requestDetails = listProperties;
 
-
         /*
          * ---------------------------------------------------------
          * 4. Bind normal scalar fields (MeetingDate, AOB, etc.)
@@ -1126,7 +1130,6 @@ MainApplication.NewNoteComponent.recoverListData = function () {
          */
 
         $spcontext.htmlBind(listProperties);
-
 
         /*
          * ---------------------------------------------------------
@@ -1153,14 +1156,13 @@ MainApplication.NewNoteComponent.recoverListData = function () {
         if (savedMeetingType) {
           // The change handler builds either a <select> or <input>
           var $meetingType = $(
-            "#meeting-type-container select, #meeting-type-container input"
+            "#meeting-type-container select, #meeting-type-container input",
           ).first();
 
           if ($meetingType.length) {
             $meetingType.val(savedMeetingType).trigger("change");
           }
         }
-
 
         /*
          * ---------------------------------------------------------
@@ -1171,20 +1173,17 @@ MainApplication.NewNoteComponent.recoverListData = function () {
         var selectedMeetingCategory =
           MainApplication.meetingCategory &&
           MainApplication.meetingCategory.find(function (item) {
-            return (
-              (item.Title || item.title || "") === savedCategory
-            );
+            return (item.Title || item.title || "") === savedCategory;
           });
 
         if (selectedMeetingCategory) {
           $("#duration").text(
             selectedMeetingCategory.Duration ||
               selectedMeetingCategory.duration ||
-              "0"
+              "0",
           );
           $("#duration-container").removeClass("hide-week");
         }
-
 
         /*
          * ---------------------------------------------------------
@@ -1204,17 +1203,14 @@ MainApplication.NewNoteComponent.recoverListData = function () {
             var recoveredDate = new Date(
               dateParts[0],
               dateParts[1] - 1,
-              dateParts[2]
+              dateParts[2],
             );
             var weekNumber =
-              MainApplication.NewNoteComponent.getWeekNumber(
-                recoveredDate
-              );
+              MainApplication.NewNoteComponent.getWeekNumber(recoveredDate);
             $("#week-number").text(weekNumber);
             $(".meeting-date-label .week").removeClass("hide-week");
           }
         }
-
 
         /*
          * ---------------------------------------------------------
@@ -1229,7 +1225,6 @@ MainApplication.NewNoteComponent.recoverListData = function () {
           $("#end-time").attr("min", listProperties.StartTime);
         }
 
-
         /*
          * ---------------------------------------------------------
          * 9. Restore dynamic tables (Absentees / Agenda / Discussion)
@@ -1241,7 +1236,6 @@ MainApplication.NewNoteComponent.recoverListData = function () {
           Agenda: listProperties.Agenda,
           Discussion: listProperties.Discussion,
         });
-
 
         /*
          * ---------------------------------------------------------
@@ -1259,27 +1253,28 @@ MainApplication.NewNoteComponent.recoverListData = function () {
 
         var attendeesEmails =
           MainApplication.NewNoteComponent.normalizePeopleEmails(
-            listProperties.Attendees
+            listProperties.Attendees,
           );
         var timeOffEmails =
           MainApplication.NewNoteComponent.normalizePeopleEmails(
-            listProperties.TimeOff
+            listProperties.TimeOff,
           );
         var presenterEmails =
           MainApplication.NewNoteComponent.normalizePeopleEmails(
-            listProperties.Presenter
+            listProperties.Presenter,
           );
         var engagementParticipantEmails =
           MainApplication.NewNoteComponent.normalizePeopleEmails(
-            listProperties.EngagementParticipant
+            listProperties.EngagementParticipant,
           );
         var timeKeeperEmails =
           MainApplication.NewNoteComponent.normalizePeopleEmails(
-            listProperties.TimeKeeper
+            listProperties.TimeKeeper,
           );
         // single-select: pass a string, not an array
-        var timeKeeperEmail =
-          timeKeeperEmails.length ? timeKeeperEmails[0] : "";
+        var timeKeeperEmail = timeKeeperEmails.length
+          ? timeKeeperEmails[0]
+          : "";
 
         PeoplePicker.defaultValues = {};
 
@@ -1295,7 +1290,7 @@ MainApplication.NewNoteComponent.recoverListData = function () {
         if (engagementParticipantEmails.length) {
           PeoplePicker.setDefault(
             "EngagementParticipant",
-            engagementParticipantEmails
+            engagementParticipantEmails,
           );
         }
         if (timeKeeperEmail) {
@@ -1321,10 +1316,9 @@ MainApplication.NewNoteComponent.recoverListData = function () {
         applyPickerVal(
           "EngagementParticipant",
           engagementParticipantEmails,
-          true
+          true,
         );
         applyPickerVal("TimeKeeper", timeKeeperEmail || null, false);
-
 
         /*
          * ---------------------------------------------------------
@@ -1340,7 +1334,6 @@ MainApplication.NewNoteComponent.recoverListData = function () {
 
         MainApplication.NewNoteComponent.renderActionItems();
 
-
         /*
          * ---------------------------------------------------------
          * 16. Re-apply validation
@@ -1348,7 +1341,6 @@ MainApplication.NewNoteComponent.recoverListData = function () {
          */
 
         $spcontext.applyValidationEvents();
-
 
         /*
          * ---------------------------------------------------------
@@ -1363,13 +1355,11 @@ MainApplication.NewNoteComponent.recoverListData = function () {
 
         console.log(
           "Meeting draft recovered successfully:",
-          AppRequest.requestDetails
+          AppRequest.requestDetails,
         );
-      }
+      },
     );
-
   } else {
-
     globalDefinitions.closeLoader();
 
     MainApplication.notyf.error("Invalid Request...");
@@ -1403,7 +1393,6 @@ MainApplication.NewNoteComponent.parseSavedJSON = function (value) {
 };
 
 MainApplication.NewNoteComponent.normalizePeopleEmails = function (value) {
-
   if (value == null || value === "") return [];
 
   if (typeof value === "string") {
@@ -1413,7 +1402,7 @@ MainApplication.NewNoteComponent.normalizePeopleEmails = function (value) {
     if (trimmed.charAt(0) === "[" || trimmed.charAt(0) === "{") {
       try {
         return MainApplication.NewNoteComponent.normalizePeopleEmails(
-          JSON.parse(trimmed)
+          JSON.parse(trimmed),
         );
       } catch (e) {
         // plain email string
@@ -1448,10 +1437,14 @@ MainApplication.NewNoteComponent.normalizePeopleEmails = function (value) {
 
       // SP.FieldUserValue sometimes exposes get_email / get_lookupValue
       if (!email && typeof item.get_email === "function") {
-        try { email = item.get_email(); } catch (e) {}
+        try {
+          email = item.get_email();
+        } catch (e) {}
       }
       if (!email && typeof item.get_lookupValue === "function") {
-        try { email = item.get_lookupValue(); } catch (e) {}
+        try {
+          email = item.get_lookupValue();
+        } catch (e) {}
       }
       // fromUser stores the account in $1_1 / $5_1 depending on build – fall back to toString
       if (!email && typeof item.toString === "function") {
@@ -1503,5 +1496,4 @@ MainApplication.NewNoteComponent.hydrateMeetingTables = function (savedData) {
 
   MainApplication.bindDeleteEvents();
   $spcontext.applyValidationEvents();
-}
-;
+};
