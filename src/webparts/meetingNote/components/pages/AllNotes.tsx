@@ -73,6 +73,7 @@ export default class AllNotes extends React.Component<{}, {}> {
                         <th speed-table-data="MeetingDate">Meeting Date</th>
                         <th speed-table-data="Reporter">Reporter</th>
                         <th speed-table-data="Status">Status</th>
+                        <th speed-table-data="Modified">Action</th>
                       </tr>
                     </thead>
                     <tbody id="speed-data-table" />

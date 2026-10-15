@@ -49,7 +49,7 @@ export default class MyNotes extends React.Component<{}, {}> {
                 <span>Drafted Notes</span>
                 <strong id="pendingRequest"></strong>
               </article>
-              <article>
+              <article id="stat-submitted">
                 <span id="stat-label-submitted">Submitted Notes</span>
                 <strong id="completedRequest"></strong>
               </article>
@@ -113,6 +113,7 @@ export default class MyNotes extends React.Component<{}, {}> {
                         <th speed-table-data="MeetingType">Meeting Type</th>
                         <th speed-table-data="MeetingDate">Meeting Date</th>
                         <th speed-table-data="Status">Status</th>
+                        <th speed-table-data="Modified">Action</th>
                       </tr>
                     </thead>
                     <tbody id="speed-data-table" />

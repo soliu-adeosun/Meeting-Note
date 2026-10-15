@@ -654,7 +654,7 @@ MainApplication.NewNoteComponent.proceedToList = function (formData) {
       return;
     }
 
-    component.createMeetingTasks(formData.ReferenceID, function () {
+    component.createMeetingTasks(formData, function () {
       finishRequest();
     });
   };
@@ -947,7 +947,7 @@ MainApplication.NewNoteComponent.renderActionItems = function () {
 };
 
 MainApplication.NewNoteComponent.createMeetingTasks = function (
-  referenceID,
+  formData,
   callback
 ) {
   const actionItems = AppRequest.actionItems || [];
@@ -956,6 +956,9 @@ MainApplication.NewNoteComponent.createMeetingTasks = function (
     if (callback) callback();
     return;
   }
+  const referenceID = formData.ReferenceID || "";
+  const meetingType = formData.MeetingType || "";
+  const meetingCategory = formData.MeetingCategory || "";
 
   const taskItems = actionItems.map(function (item) {
     return {
@@ -967,6 +970,8 @@ MainApplication.NewNoteComponent.createMeetingTasks = function (
       DueDate: item.DueDate,
       ActionPlan: item.ActionPlan || "",
       Status: "Not Started",
+      MeetingType: meetingType,
+      MeetingCategory: meetingCategory,
     };
   });
 

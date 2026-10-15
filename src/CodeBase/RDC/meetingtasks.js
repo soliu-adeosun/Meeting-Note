@@ -33,14 +33,6 @@ whenMeetingTasksDependeciesLoaded = function () {
   speedctxRoot.DataForTable.paginationuId = "toppagination";
 
   speedctxRoot.DataForTable.propertiesHandler = {
-    Task: function (valueToEva) {
-      var viewStr = `
-                <a class="brown-anchor" href="#/viewtask?itemId=${valueToEva.ID}">
-                    ${valueToEva.Task}
-                </a>`;
-
-      return viewStr;
-    },
     DueDate: function (valueToEva) {
       return $spcontext.stringnifyDate({
         value: valueToEva.DueDate,
@@ -59,6 +51,18 @@ whenMeetingTasksDependeciesLoaded = function () {
       if (valueToEva.Status === "Not Started") {
         return `<span class="vn-task-status is-notstarted">${valueToEva.Status}</span>`;
       }
+    },
+    Modified: function (valueToEva) {
+      var id = valueToEva.ID || "";
+      var viewicon = '<i class="fa fa-eye" aria-hidden="true"></i>';
+      if (!id) return "";
+      return (
+        '<a title="View Task" class="brown-anchor" href="#/viewtask?itemId=' +
+        id +
+        '">' +
+        viewicon +
+        "</a>"
+      );
     }
   };
 
@@ -122,6 +126,8 @@ MainApplication.MeetingTasksComponent.retrieveRequest = function () {
       "Status",
 
       "Modified",
+      "MeetingType",
+      "MeetingCategory",
     ],
   };
 

@@ -31,20 +31,23 @@ whenMyNotesDependeciesLoaded = function () {
   speedctxRoot.DataForTable.paginationuId = "toppagination";
 
   speedctxRoot.DataForTable.propertiesHandler = {
-    ReferenceID: function (valueToEva) {
+    Modified: function (valueToEva) {
       var id = valueToEva.ReferenceID || "";
+      var viewicon = '<i class="fa fa-eye" aria-hidden="true"></i>';
+      var editicon = '<i class="fa fa-pen" aria-hidden="true"></i>';
+      if (!id) return "";
       var viewStr =
         '<a class="brown-anchor" title="View Meeting Note" href="#/viewnote?itemId=' +
         id +
         '">' +
-        id +
+        viewicon +
         "</a>";
       // Drafts open on the home page (New Meeting Note) for editing
       var editStr =
         '<a class="brown-anchor" title="Edit Draft" href="#/?itemId=' +
         id +
         '&mode=editdraft">' +
-        id +
+        editicon +
         "</a>";
 
       if (valueToEva.Status === "Submitted") {
@@ -177,11 +180,13 @@ MainApplication.MyNotesComponent.syncTabUI = function () {
     $("#stat-drafts").show();
     $("#stat-label-total").text("Total Notes");
     $("#stat-label-submitted").text("Submitted Notes");
+    $("#stat-submitted").show();
   } else {
     // Previous notes are all Submitted — hide draft stat
     $("#stat-drafts").hide();
     $("#stat-label-total").text("Total Notes");
     $("#stat-label-submitted").text("Submitted Notes");
+    $("#stat-submitted").hide();
   }
 };
 

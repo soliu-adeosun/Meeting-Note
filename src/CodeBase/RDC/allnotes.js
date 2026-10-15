@@ -27,17 +27,6 @@ function whenAllNotesDependeciesLoaded() {
   speedctxRoot.DataForTable.paginationuId = "toppagination";
 
   speedctxRoot.DataForTable.propertiesHandler = {
-    ReferenceID: function (valueToEva) {
-      var id = valueToEva.ReferenceID || "";
-
-      return (
-          '<a class="brown-anchor" title="View Meeting Note" href="#/viewnote?itemId=' +
-          id +
-          '">' +
-          id +
-          "</a>"
-        );
-    },
     MeetingDate: function (valueToEva) {
       return $spcontext.stringnifyDate({
         value: valueToEva.MeetingDate,
@@ -62,6 +51,20 @@ function whenAllNotesDependeciesLoaded() {
       }
       return valueToEva.Status || "";
     },
+
+    Modified: function (valueToEva) {
+      var id = valueToEva.ReferenceID || "";
+      var viewicon = '<i class="fa fa-eye" aria-hidden="true"></i>';
+      var editicon = '<i class="fa fa-pen" aria-hidden="true"></i>';
+      if (!id) return "";
+        return (
+            '<a title="View Meeting Note" class="brown-anchor" href="#/viewnote?itemId=' +
+            id +
+            '">' +
+            viewicon +
+            "</a>"
+        ); 
+    }
   };
 
   $(document)

@@ -81,7 +81,7 @@ const NavIcon: React.FC<{name: IconName}> = ({name}) => {
 
 const NAV_ITEMS: {path: string; label: string; icon: IconName}[] = [
     {path: "/", label: "New Meeting Note", icon: "new"},
-    {path: "/mynotes", label: "Meeting Notes", icon: "form"},
+    {path: "/mynotes", label: "My Meetings", icon: "form"},
     {path: "/meetingtasks", label: "View Meeting Tasks", icon: "task"},
     {path: "/allnotes", label: "All Meeting Notes", icon: "allnotes"},
     {path: "/alltasks", label: "All Meeting Tasks", icon: "alltasks"},

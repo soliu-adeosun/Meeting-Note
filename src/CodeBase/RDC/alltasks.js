@@ -27,17 +27,6 @@ function whenAllTasksDependeciesLoaded() {
   speedctxRoot.DataForTable.paginationuId = "toppagination";
 
   speedctxRoot.DataForTable.propertiesHandler = {
-    ReferenceID: function (valueToEva) {
-      var id = valueToEva.ReferenceID || "";
-      if (!id) return "";
-      return (
-        '<a class="brown-anchor" href="#/viewnote?itemId=' +
-        id +
-        '">' +
-        id +
-        "</a>"
-      );
-    },
     DueDate: function (valueToEva) {
       return $spcontext.stringnifyDate({
         value: valueToEva.DueDate,
@@ -69,6 +58,19 @@ function whenAllTasksDependeciesLoaded() {
       }
       return valueToEva.Status || "";
     },
+
+    Modified: function (valueToEva) {
+      var id = valueToEva.ID || "";
+      var viewicon = '<i class="fa fa-eye" aria-hidden="true"></i>';
+      if (!id) return "";
+      return (
+        '<a title="View Task" class="brown-anchor" href="#/viewtask?itemId=' +
+        id +
+        '">' +
+        viewicon +
+        "</a>"
+      );
+    }
   };
 
   $(document)
@@ -110,6 +112,8 @@ MainApplication.AllTasksComponent.retrieveAllTasks = function () {
       "ReferenceID",
       "Status",
       "Modified",
+        "MeetingType",
+        "MeetingCategory",
     ],
   };
 

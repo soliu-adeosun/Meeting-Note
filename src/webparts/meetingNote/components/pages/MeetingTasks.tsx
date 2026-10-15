@@ -60,7 +60,9 @@ export default class MeetingTasks extends React.Component<{}, {}> {
                         <th speed-table-data="Task">Description</th>
                         <th speed-table-data="Title">Task Category</th>
                         <th speed-table-data="DueDate">Due Date</th>
+                        <th speed-table-data="MeetingType">Meeting Type</th>
                         <th speed-table-data="Status">Status</th>
+                        <th speed-table-data="Modified">Action</th>
                       </tr>
                     </thead>
                     <tbody id="speed-data-table"></tbody>
