@@ -95,6 +95,7 @@ function whenNewNoteDependeciesLoaded() {
 
   PeoplePicker.defaultValues = {};
   PeoplePicker.initializePeoplePickers(MainApplication.staffList);
+  MainApplication.NewNoteComponent.bindPeoplePickerConstraints();
 
   MainApplication.NewNoteComponent.editingActionIndex = null;
 
@@ -723,6 +724,19 @@ MainApplication.NewNoteComponent.prepareAllTables = function () {
     },
   });
 
+  // Ensure new rows still get the exclusivity change handler (delegated on document — already OK).
+// Optional: if afterRowAdded is available on the settings object:
+var absSettings =
+  AppRequest.absenteeCTX.dynamicTableSettings &&
+  AppRequest.absenteeCTX.dynamicTableSettings.Absentees;
+if (absSettings && typeof absSettings.afterRowAdded === "function") {
+  var prev = absSettings.afterRowAdded;
+  absSettings.afterRowAdded = function () {
+    prev.apply(this, arguments);
+    // delegated handler covers new selects; nothing else required
+  };
+}
+
   MainApplication.initializeDynamicTable({
     ctx: AppRequest.agendaCTX,
 
@@ -1298,6 +1312,7 @@ MainApplication.NewNoteComponent.recoverListData = function () {
         }
 
         PeoplePicker.initializePeoplePickers(MainApplication.staffList);
+        
 
         // Belt-and-suspenders: force Select2 values in case defaults
         // were missed (e.g. option list still loading).
@@ -1312,13 +1327,19 @@ MainApplication.NewNoteComponent.recoverListData = function () {
         }
         applyPickerVal("Attendees", attendeesEmails, true);
         applyPickerVal("TimeOff", timeOffEmails, true);
+        applyPickerVal("TimeKeeper", timeKeeperEmail || null, false);
+
+        MainApplication.NewNoteComponent.bindPeoplePickerConstraints();
+
+        MainApplication.NewNoteComponent.syncAttendeeSubsetPickers();
+
         applyPickerVal("Presenter", presenterEmails, true);
         applyPickerVal(
           "EngagementParticipant",
           engagementParticipantEmails,
           true,
         );
-        applyPickerVal("TimeKeeper", timeKeeperEmail || null, false);
+        
 
         /*
          * ---------------------------------------------------------
@@ -1496,4 +1517,344 @@ MainApplication.NewNoteComponent.hydrateMeetingTables = function (savedData) {
 
   MainApplication.bindDeleteEvents();
   $spcontext.applyValidationEvents();
+};
+
+/* =========================================================================
+ * People exclusivity (New Meeting Note)
+ * - Attendees ↔ Time-Off ↔ Absentees: mutually exclusive (block + error)
+ * - Presenter & EngagementParticipant: only people currently in Attendees
+ * ========================================================================= */
+
+MainApplication.NewNoteComponent._picker$ = function (pickerId) {
+  return $('[custom-people="' + pickerId + '"]');
+};
+
+/** Selected emails from a people-picker (multi or single). */
+MainApplication.NewNoteComponent.emailsFromPicker = function (pickerId) {
+  var $el = MainApplication.NewNoteComponent._picker$(pickerId);
+  if (!$el.length) return [];
+  var val = $el.val();
+  if (val == null || val === "") return [];
+  return (Array.isArray(val) ? val : [val]).filter(Boolean).map(String);
+};
+
+/**
+ * Resolve Absentees person cells to emails.
+ * Options may use Title as value (selectColumn) or Email — support both.
+ */
+MainApplication.NewNoteComponent.emailsFromAbsentees = function () {
+  var staff = MainApplication.staffList || [];
+  var emails = [];
+
+  $("#absentees-container tr").each(function () {
+    var $sel = $(this).find("select.speed-table-include").first();
+    if (!$sel.length) return;
+    var token = $sel.val();
+    if (!token) return;
+
+    var hit = staff.find(function (s) {
+      return (
+        s &&
+        (String(s.Email) === String(token) ||
+          String(s.Title) === String(token))
+      );
+    });
+    if (hit && hit.Email) {
+      emails.push(String(hit.Email));
+    }
+  });
+
+  return emails;
+};
+
+MainApplication.NewNoteComponent.staffByEmail = function (email) {
+  email = String(email || "");
+  return (MainApplication.staffList || []).find(function (s) {
+    return s && String(s.Email) === email;
+  });
+};
+
+MainApplication.NewNoteComponent.displayNameForEmail = function (email) {
+  var s = MainApplication.NewNoteComponent.staffByEmail(email);
+  return (s && s.Title) || email;
+};
+
+/**
+ * Rebuild a picker's <option> list from allowed staff, keeping valid selections.
+ * Used for Presenter / EngagementParticipant (subset of Attendees).
+ */
+MainApplication.NewNoteComponent.rebuildPickerFromStaff = function (
+  pickerId,
+  allowedStaff
+) {
+  var $picker = MainApplication.NewNoteComponent._picker$(pickerId);
+  if (!$picker.length) return;
+
+  var current = MainApplication.NewNoteComponent.emailsFromPicker(pickerId);
+  var allowedMap = {};
+  (allowedStaff || []).forEach(function (s) {
+    if (s && s.Email) allowedMap[String(s.Email)] = s;
+  });
+
+  var nextSelected = current.filter(function (email) {
+    return !!allowedMap[email];
+  });
+
+  var photoBase = MainApplication.profilephoto || "";
+  $picker.empty().append("<option></option>");
+
+  Object.keys(allowedMap)
+    .sort(function (a, b) {
+      return String(allowedMap[a].Title || a).localeCompare(
+        String(allowedMap[b].Title || b)
+      );
+    })
+    .forEach(function (email) {
+      var person = allowedMap[email];
+      $picker.append(
+        '<option value="' +
+          email +
+          '" data-image="' +
+          photoBase +
+          email +
+          '">' +
+          (person.Title || email) +
+          "</option>"
+      );
+    });
+
+  if ($picker.prop("multiple")) {
+    $picker.val(nextSelected);
+  } else {
+    $picker.val(nextSelected[0] || "");
+  }
+
+  if ($picker.data("select2")) {
+    $picker.trigger("change.select2");
+  } else {
+    $picker.trigger("change");
+  }
+};
+
+MainApplication.NewNoteComponent.staffOnlyEmails = function (emails) {
+  var allow = {};
+  (emails || []).forEach(function (e) {
+    if (e) allow[String(e)] = true;
+  });
+  return (MainApplication.staffList || []).filter(function (s) {
+    return s && s.Email && allow[String(s.Email)];
+  });
+};
+
+/**
+ * Limit Presenter + EngagementParticipant options to current Attendees.
+ * Also drops any previously selected person no longer in Attendees.
+ */
+MainApplication.NewNoteComponent.syncAttendeeSubsetPickers = function () {
+  var attendees = MainApplication.NewNoteComponent.emailsFromPicker("Attendees");
+  var allowed = MainApplication.NewNoteComponent.staffOnlyEmails(attendees);
+
+  MainApplication.NewNoteComponent.rebuildPickerFromStaff("Presenter", allowed);
+  MainApplication.NewNoteComponent.rebuildPickerFromStaff(
+    "EngagementParticipant",
+    allowed
+  );
+};
+
+/**
+ * Block selecting `email` on `pickerId` if it conflicts with exclusivity rules.
+ * Returns true if blocked (caller should preventDefault).
+ */
+MainApplication.NewNoteComponent.shouldBlockPeopleSelection = function (
+  pickerId,
+  email
+) {
+  if (!email) return false;
+
+  var component = MainApplication.NewNoteComponent;
+  var name = component.displayNameForEmail(email);
+  var attendees = component.emailsFromPicker("Attendees");
+  var timeOff = component.emailsFromPicker("TimeOff");
+  var absentees = component.emailsFromAbsentees();
+
+  // --- Mutual exclusion: Attendees / Time-Off / Absentees ---
+  if (pickerId === "Attendees") {
+    if (timeOff.indexOf(String(email)) > -1) {
+      globalDefinitions.HandlerError(
+        name +
+          " is already listed under Time-Off. Remove them there before adding to Attendees."
+      );
+      return true;
+    }
+    if (absentees.indexOf(String(email)) > -1) {
+      globalDefinitions.HandlerError(
+        name +
+          " is already listed under Absentees. Remove them there before adding to Attendees."
+      );
+      return true;
+    }
+    return false;
+  }
+
+  if (pickerId === "TimeOff") {
+    if (attendees.indexOf(String(email)) > -1) {
+      globalDefinitions.HandlerError(
+        name +
+          " is already listed under Attendees. Remove them there before adding to Time-Off."
+      );
+      return true;
+    }
+    if (absentees.indexOf(String(email)) > -1) {
+      globalDefinitions.HandlerError(
+        name +
+          " is already listed under Absentees. Remove them there before adding to Time-Off."
+      );
+      return true;
+    }
+    return false;
+  }
+
+  // Absentees handled separately (native <select>, value may be Title)
+
+  // --- Subset of Attendees ---
+  if (pickerId === "Presenter" || pickerId === "EngagementParticipant") {
+    if (attendees.indexOf(String(email)) === -1) {
+      globalDefinitions.HandlerError(
+        name +
+          " must be selected under Attendees before they can be set as " +
+          (pickerId === "Presenter" ? "Presenter" : "Engagement Participant") +
+          "."
+      );
+      return true;
+    }
+    return false;
+  }
+
+  return false;
+};
+
+/**
+ * Block Absentees person choice if already in Attendees or Time-Off
+ * (or already chosen on another absentee row).
+ */
+MainApplication.NewNoteComponent.shouldBlockAbsenteePerson = function (
+  $select,
+  token
+) {
+  if (!token) return false;
+
+  var component = MainApplication.NewNoteComponent;
+  var staff = MainApplication.staffList || [];
+  var hit = staff.find(function (s) {
+    return (
+      s &&
+      (String(s.Email) === String(token) ||
+        String(s.Title) === String(token))
+    );
+  });
+  var email = hit && hit.Email ? String(hit.Email) : String(token);
+  var name = (hit && hit.Title) || token;
+
+  var attendees = component.emailsFromPicker("Attendees");
+  var timeOff = component.emailsFromPicker("TimeOff");
+
+  if (attendees.indexOf(email) > -1) {
+    globalDefinitions.HandlerError(
+      name +
+        " is already listed under Attendees. Remove them there before adding to Absentees."
+    );
+    return true;
+  }
+  if (timeOff.indexOf(email) > -1) {
+    globalDefinitions.HandlerError(
+      name +
+        " is already listed under Time-Off. Remove them there before adding to Absentees."
+    );
+    return true;
+  }
+
+  // Same person on another absentee row
+  var duplicate = false;
+  $("#absentees-container tr").each(function () {
+    var $other = $(this).find("select.speed-table-include").first();
+    if (!$other.length || ($select && $other[0] === $select[0])) return;
+    var ov = $other.val();
+    if (!ov) return;
+    var otherHit = staff.find(function (s) {
+      return (
+        s &&
+        (String(s.Email) === String(ov) || String(s.Title) === String(ov))
+      );
+    });
+    var otherEmail =
+      otherHit && otherHit.Email ? String(otherHit.Email) : String(ov);
+    if (otherEmail === email) duplicate = true;
+  });
+
+  if (duplicate) {
+    globalDefinitions.HandlerError(
+      name + " is already listed on another Absentees row."
+    );
+    return true;
+  }
+
+  return false;
+};
+
+/**
+ * Bind Select2 pre-select guards + keep Presenter/Engagement in sync with Attendees.
+ * Safe to call multiple times (namespaces + .off first).
+ */
+MainApplication.NewNoteComponent.bindPeoplePickerConstraints = function () {
+  var component = MainApplication.NewNoteComponent;
+  var exclusiveIds = ["Attendees", "TimeOff", "Presenter", "EngagementParticipant"];
+
+  exclusiveIds.forEach(function (pickerId) {
+    var $p = component._picker$(pickerId);
+    if (!$p.length) return;
+
+    // select2:selecting — cancel before the value is applied
+    $p.off("select2:selecting.nnExclusive").on(
+      "select2:selecting.nnExclusive",
+      function (e) {
+        var email =
+          e.params &&
+          e.params.args &&
+          e.params.args.data &&
+          e.params.args.data.id;
+        if (component.shouldBlockPeopleSelection(pickerId, email)) {
+          e.preventDefault();
+        }
+      }
+    );
+  });
+
+  // When Attendees change, refresh Presenter + Engagement option lists
+  component
+    ._picker$("Attendees")
+    .off("change.nnAttendeeSubset")
+    .on("change.nnAttendeeSubset", function () {
+      component.syncAttendeeSubsetPickers();
+    });
+
+  // Absentees: native select — revert value if blocked
+  $(document)
+    .off(
+      "change.nnExclusiveAbs",
+      "#absentees-container select.speed-table-include"
+    )
+    .on(
+      "change.nnExclusiveAbs",
+      "#absentees-container select.speed-table-include",
+      function () {
+        var $sel = $(this);
+        var token = $sel.val();
+        if (component.shouldBlockAbsenteePerson($sel, token)) {
+          $sel.val("");
+        }
+      }
+    );
+
+  // Initial subset sync (empty attendees → empty Presenter/Engagement lists)
+  component.syncAttendeeSubsetPickers();
 };

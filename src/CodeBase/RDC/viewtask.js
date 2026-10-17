@@ -21,10 +21,31 @@ function whenViewTaskDependeciesLoaded() {
     $spcontext.getParameterByName("itemId", window.location.href);
 
   $("#vt-save-status")
-    .off("click.vtsave")
-    .on("click.vtsave", function () {
-      MainApplication.ViewTaskComponent.saveStatus();
-    });
+  .off("click.vtsave")
+  .on("click.vtsave", function () {
+    const taskDetails = AppRequest.taskDetails;
+    const currentUser = CurrentUserProperties;
+    let isAuthorized = false;
+
+    if (taskDetails.Title === "Person") {
+      isAuthorized = currentUser.title === taskDetails.Name;
+    } 
+    else if (taskDetails.Title === "Division") {
+      const staffDetails =
+        MainApplication.staffDetails[currentUser.email];
+
+      isAuthorized =
+        staffDetails &&
+        staffDetails.Department === taskDetails.Name;
+    }
+
+    if (!isAuthorized) {
+      globalDefinitions.HandlerError("You are not authorized to action this task");
+      return;
+    }
+
+    MainApplication.ViewTaskComponent.saveStatus();
+  });
 
   if (!AppRequest.itemId) {
     globalDefinitions.closeLoader();
